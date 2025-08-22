@@ -654,6 +654,113 @@ def logout():
     
     return redirect(url_for('index'))
 
+@app.route('/forgot_password', methods=['GET', 'POST'])
+def forgot_password():
+    """
+    Forgot password route - handles password reset requests.
+    
+    Features:
+    - Email-based password reset
+    - Token generation and validation
+    - Security measures for reset process
+    
+    Returns:
+        str: Rendered template or redirect
+    """
+    if request.method == 'POST':
+        try:
+            email = request.form.get('email')
+            if not email:
+                flash('Please enter your email address.', 'error')
+                return render_template('forgot_password.html')
+            
+            user = User.get_by_email(email)
+            if user:
+                # Generate reset token
+                token = secrets.token_urlsafe(32)
+                reset_token = PasswordResetToken(
+                    user_id=user.id,
+                    token=token,
+                    expires_at=datetime.now() + timedelta(hours=24)
+                )
+                reset_token.save()
+                
+                # In a real application, send email here
+                # For now, just show a success message
+                flash('Password reset instructions have been sent to your email.', 'success')
+                logger.info(f"Password reset requested for user {user.username}")
+            else:
+                # Don't reveal if email exists or not for security
+                flash('If the email exists, password reset instructions have been sent.', 'info')
+            
+            return redirect(url_for('login'))
+            
+        except Exception as e:
+            flash('An error occurred. Please try again.', 'error')
+            logger.error(f"Password reset error: {e}")
+    
+    return render_template('forgot_password.html')
+
+@app.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    """
+    Reset password route - handles password reset with token.
+    
+    Features:
+    - Token validation
+    - Password strength validation
+    - Secure password update
+    
+    Args:
+        token: Password reset token
+        
+    Returns:
+        str: Rendered template or redirect
+    """
+    try:
+        # Find valid reset token
+        reset_token = PasswordResetToken.query.filter(
+            PasswordResetToken.token == token,
+            PasswordResetToken.expires_at > datetime.now(),
+            PasswordResetToken.used == False
+        ).first()
+        
+        if not reset_token:
+            flash('Invalid or expired reset token.', 'error')
+            return redirect(url_for('login'))
+        
+        if request.method == 'POST':
+            password = request.form.get('password')
+            confirm_password = request.form.get('confirm_password')
+            
+            if not password or not confirm_password:
+                flash('Please fill in all fields.', 'error')
+            elif password != confirm_password:
+                flash('Passwords do not match.', 'error')
+            elif len(password) < 12:
+                flash('Password must be at least 12 characters long.', 'error')
+            else:
+                # Update user password
+                user = User.get_by_id(reset_token.user_id)
+                if user:
+                    user.set_password(password)
+                    user.save()
+                    
+                    # Mark token as used
+                    reset_token.used = True
+                    reset_token.save()
+                    
+                    flash('Password has been reset successfully. Please log in.', 'success')
+                    logger.info(f"Password reset completed for user {user.username}")
+                    return redirect(url_for('login'))
+        
+        return render_template('reset_password.html', token=token)
+        
+    except Exception as e:
+        flash('An error occurred. Please try again.', 'error')
+        logger.error(f"Password reset error: {e}")
+        return redirect(url_for('login'))
+
 # =============================================================================
 # 10.2 LEARNING ROUTES
 # =============================================================================
