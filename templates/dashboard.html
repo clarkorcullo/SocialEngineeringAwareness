@@ -133,7 +133,7 @@
                     <h5 class="card-title">Learning Progress</h5>
                     <div class="progress mb-2">
                         <div class="progress-bar" role="progressbar" 
-                             style="width: {{ (completed_modules / total_modules) * 100 }}%">
+                             style="width: {{ (completed_modules * 100 // (total_modules if total_modules else 1)) }}%">
                         </div>
                     </div>
                     <p class="card-text mt-auto">{{ completed_modules }} of {{ total_modules }} modules completed</p>
@@ -311,13 +311,13 @@
                             <p class="mb-3">You need to complete all {{ total_modules }} modules before taking the Final Assessment.</p>
                             <div class="progress mb-3" style="height: 25px; background-color: #e9ecef;">
                                 <div class="progress-bar bg-primary" role="progressbar" 
-                                     style="width: {{ (completed_modules / total_modules) * 100 }}%; font-weight: bold; font-size: 14px; line-height: 25px;">
+                                     style="width: {{ (completed_modules * 100 // (total_modules if total_modules else 1)) }}%; font-weight: bold; font-size: 14px; line-height: 25px;">
                                     <strong>{{ completed_modules }}/{{ total_modules }} Modules</strong>
                                 </div>
                             </div>
                             <div class="d-flex justify-content-between align-items-center">
                                 <small class="text-muted">{{ total_modules - completed_modules }} modules remaining</small>
-                                <small class="text-primary fw-bold">{{ (completed_modules / total_modules) * 100 }}% Complete</small>
+                                <small class="text-primary fw-bold">{{ (completed_modules * 100 // (total_modules if total_modules else 1)) }}% Complete</small>
                             </div>
                         </div>
                     {% endif %}

@@ -257,26 +257,22 @@ def load_user(user_id):
 # 7. DATABASE INITIALIZATION ON STARTUP
 # =============================================================================
 
-# Ensure database is initialized when running under WSGI servers (e.g., Render)
-try:
-    with app.app_context():
+# Defer database initialization to first request to avoid calling helpers
+# (e.g., create_default_modules) before they are defined at import time.
+@app.before_first_request
+def ensure_database_initialized():
+    try:
         init_database()
-except Exception as e:
-    logger.error(f"[ERROR] Database init on import failed: {e}")
+        logger.info("[SUCCESS] Database initialized (first request)")
+    except Exception as e:
+        logger.error(f"[ERROR] Database init on first request failed: {e}")
 
 # =============================================================================
 # 8. APPLICATION FACTORY PATTERN
 # =============================================================================
 
-# Initialize database and create default data
-with app.app_context():
-    try:
-        init_database()
-        logger.info("[SUCCESS] Application initialized successfully")
-    except Exception as e:
-        logger.error(f"[ERROR] Application initialization failed: {e}")
-        # Continue anyway - the app might still work
-        # This is expected on Render where database might not be writable during import
+# NOTE: Removed import-time DB initialization to avoid NameError and startup races
+# Initialization now happens on first request via @app.before_first_request
 
 # =============================================================================
 # 9. EDUCATIONAL CONTENT CREATION FUNCTIONS
