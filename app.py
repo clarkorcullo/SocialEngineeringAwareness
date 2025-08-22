@@ -46,6 +46,7 @@ import secrets
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.middleware.proxy_fix import ProxyFix
+from sqlalchemy import text
 
 # Local application imports
 from data_models.base_models import db
@@ -1216,7 +1217,6 @@ def health_check():
     """
     try:
         # Check database connection
-        from sqlalchemy import text
         db.session.execute(text('SELECT 1'))
         return jsonify({
             'status': 'healthy',
