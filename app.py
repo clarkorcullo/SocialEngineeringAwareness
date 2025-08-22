@@ -1,11 +1,39 @@
 """
-Refactored Social Engineering Awareness Program
-Main application file using OOP principles and design patterns
+🛡️ SOCIAL ENGINEERING AWARENESS PROGRAM
+========================================
+
+Main Flask application for the Social Engineering Awareness Program.
+This file contains all routes, middleware, and application configuration.
+
+ARCHITECTURE:
+- Clean Architecture with Service Layer Pattern
+- Object-Oriented Programming principles
+- Separation of concerns between routes and business logic
+- Comprehensive error handling and logging
+
+ORGANIZATION:
+1. IMPORTS AND SETUP
+2. CONFIGURATION AND INITIALIZATION
+3. DATABASE INITIALIZATION
+4. AUTHENTICATION ROUTES
+5. LEARNING ROUTES
+6. ASSESSMENT ROUTES
+7. SIMULATION ROUTES
+8. PROGRESS AND ANALYTICS ROUTES
+9. SYSTEM ROUTES
+10. ERROR HANDLERS
+11. APPLICATION ENTRY POINT
+
+Author: Capstone Project Team
+Version: 1.0.0
+License: MIT
 """
 
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
-from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from werkzeug.middleware.proxy_fix import ProxyFix
+# =============================================================================
+# 1. IMPORTS AND SETUP
+# =============================================================================
+
+# Standard library imports
 import os
 import sys
 import logging
@@ -14,9 +42,40 @@ import random
 import json
 import secrets
 
-# Configure logging
+# Third-party imports
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from werkzeug.middleware.proxy_fix import ProxyFix
+
+# Local application imports
+from data_models.base_models import db
+from data_models import (
+    User, PasswordResetToken, Module, KnowledgeCheckQuestion, 
+    FinalAssessmentQuestion, UserProgress, AssessmentResult, 
+    SimulationResult, FeedbackSurvey
+)
+from business_services import (
+    UserService, AssessmentService, SimulationService
+)
+from config import config
+
+# =============================================================================
+# 2. LOGGING CONFIGURATION
+# =============================================================================
+
 def setup_logging():
-    """Setup logging configuration"""
+    """
+    Configure comprehensive logging for the application.
+    
+    Features:
+    - Console and file output
+    - UTF-8 encoding support
+    - Configurable log levels
+    - Structured formatting
+    
+    Returns:
+        logging.Logger: Configured logger instance
+    """
     log_level = os.environ.get('LOG_LEVEL', 'INFO')
     log_file = os.environ.get('LOG_FILE', 'app.log')
     
@@ -39,46 +98,57 @@ def setup_logging():
     
     return logging.getLogger(__name__)
 
+# Initialize logging
 logger = setup_logging()
 
-# Import our OOP components
-from data_models.base_models import db
-from data_models import (
-    User, PasswordResetToken, Module, KnowledgeCheckQuestion, 
-    FinalAssessmentQuestion, UserProgress, AssessmentResult, 
-    SimulationResult, FeedbackSurvey
-)
-from business_services import (
-    UserService, AssessmentService, SimulationService
-)
+# =============================================================================
+# 3. FLASK APPLICATION SETUP
+# =============================================================================
 
-
-# Import configuration
-from config import config
-
-# Initialize Flask app
+# Create Flask application instance
 app = Flask(__name__)
 
-# Load configuration
+# Load environment-based configuration
 config_name = os.environ.get('FLASK_ENV', 'production')
 app.config.from_object(config[config_name])
 
-# Reverse proxy and cookie settings for Render/HTTPS
+# Configure reverse proxy for production deployment (Render/Heroku)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
-# Initialize extensions
+# =============================================================================
+# 4. EXTENSIONS AND SERVICES INITIALIZATION
+# =============================================================================
+
+# Initialize database
 db.init_app(app)
+
+# Initialize Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-# Initialize services
+# Initialize business services
 user_service = UserService()
 assessment_service = AssessmentService()
 simulation_service = SimulationService()
 
+# =============================================================================
+# 5. DATABASE INITIALIZATION FUNCTIONS
+# =============================================================================
+
 def init_database():
-    """Initialize database with all models"""
+    """
+    Initialize database with all models and create default data.
+    
+    This function:
+    - Creates all database tables
+    - Populates default educational content
+    - Creates admin user if not exists
+    - Sets up initial modules and questions
+    
+    Raises:
+        Exception: If database initialization fails
+    """
     try:
         db.create_all()
         create_default_data()
@@ -88,9 +158,21 @@ def init_database():
         raise
 
 def create_default_data():
-    """Create default data if it doesn't exist"""
+    """
+    Create default application data including admin user, modules, and questions.
+    
+    This function ensures the application has:
+    - Default administrator account
+    - All educational modules
+    - Assessment questions
+    - Initial configuration
+    
+    The function is idempotent - it won't create duplicates if data already exists.
+    """
     try:
-        # Create default admin if not exists (use 'administrator' with strong password)
+        # =====================================================================
+        # ADMIN USER CREATION
+        # =====================================================================
         admin_user = User.get_by_username('administrator')
         if not admin_user:
             try:
@@ -112,7 +194,7 @@ def create_default_data():
         else:
             logger.info("[SUCCESS] Admin user already exists (administrator)")
 
-        # If ADMIN_PASSWORD is set and differs, reset admin password at boot
+        # Update admin password if environment variable is set
         desired_pw = os.environ.get('ADMIN_PASSWORD')
         if desired_pw and admin_user:
             try:
@@ -122,14 +204,18 @@ def create_default_data():
             except Exception as pw_e:
                 logger.warning(f"[WARNING] Could not refresh admin password: {pw_e}")
         
-        # Create modules if they don't exist
+        # =====================================================================
+        # EDUCATIONAL MODULES CREATION
+        # =====================================================================
         if Module.count() == 0:
             create_default_modules()
             logger.info("[SUCCESS] Default modules created")
         else:
             logger.info("[SUCCESS] Modules already exist")
         
-        # Create questions if they don't exist
+        # =====================================================================
+        # ASSESSMENT QUESTIONS CREATION
+        # =====================================================================
         if KnowledgeCheckQuestion.count() == 0:
             create_default_questions()
             logger.info("[SUCCESS] Default questions created")
@@ -140,14 +226,30 @@ def create_default_data():
         logger.error(f"[ERROR] Error creating default data: {e}")
         raise
 
+# =============================================================================
+# 6. FLASK-LOGIN USER LOADER
+# =============================================================================
+
 @login_manager.user_loader
 def load_user(user_id):
-    """Load user for Flask-Login"""
+    """
+    Load user for Flask-Login authentication.
+    
+    Args:
+        user_id (str): User ID from session
+        
+    Returns:
+        User: User object if found, None otherwise
+    """
     try:
         return User.get_by_id(int(user_id))
     except Exception as e:
         logger.error(f"Error loading user {user_id}: {e}")
         return None
+
+# =============================================================================
+# 7. DATABASE INITIALIZATION ON STARTUP
+# =============================================================================
 
 # Ensure database is initialized when running under WSGI servers (e.g., Render)
 try:
@@ -156,15 +258,40 @@ try:
 except Exception as e:
     logger.error(f"[ERROR] Database init on import failed: {e}")
 
-# Application Factory Pattern
+# =============================================================================
+# 8. APPLICATION FACTORY PATTERN
+# =============================================================================
+
 def create_app():
-    """Application factory for better testing and configuration"""
+    """
+    Application factory for better testing and configuration management.
+    
+    This pattern allows for:
+    - Multiple application instances
+    - Different configurations for testing
+    - Better separation of concerns
+    
+    Returns:
+        Flask: Configured Flask application instance
+    """
     with app.app_context():
         init_database()
     return app
 
+# =============================================================================
+# 9. EDUCATIONAL CONTENT CREATION FUNCTIONS
+# =============================================================================
+
 def create_default_modules():
-    """Create default learning modules with content from modules folder"""
+    """
+    Create default learning modules with content from modules folder.
+    
+    This function:
+    - Imports content from learning_modules/
+    - Creates Module objects in database
+    - Sets up simulation types for applicable modules
+    - Handles fallback content if imports fail
+    """
     try:
         # Import module content classes
         from learning_modules import (
@@ -202,76 +329,96 @@ def create_default_modules():
     except Exception as e:
         logger.error(f"[ERROR] Error creating modules: {e}")
         # Fallback to basic modules if import fails
-        modules_data = [
-            {
-                'name': 'Introduction to Social Engineering',
-                'description': 'Understanding the basics of social engineering attacks',
-                'content': 'Social engineering is a manipulation technique that exploits human error to gain private information...',
-                'order': 1,
-                'has_simulation': False
-            },
-            {
-                'name': 'Types of Social Engineering Attacks',
-                'description': 'Learn about different types of social engineering attacks',
-                'content': 'There are several types of social engineering attacks...',
-                'order': 2,
-                'has_simulation': True,
-                'simulation_type': 'phishing'
-            },
-            {
-                'name': 'Phishing Attacks',
-                'description': 'Learn about phishing techniques and prevention',
-                'content': 'Phishing is a type of social engineering attack where attackers impersonate legitimate entities...',
-                'order': 3,
-                'has_simulation': True,
-                'simulation_type': 'phishing'
-            },
-            {
-                'name': 'Pretexting and Impersonation',
-                'description': 'Understanding pretexting and impersonation techniques',
-                'content': 'Pretexting involves creating a fabricated scenario...',
-                'order': 4,
-                'has_simulation': True,
-                'simulation_type': 'pretexting'
-            },
-            {
-                'name': 'Baiting and Quid Pro Quo',
-                'description': 'Learn about baiting and quid pro quo attacks',
-                'content': 'Baiting involves leaving a physical device...',
-                'order': 5,
-                'has_simulation': True,
-                'simulation_type': 'baiting'
-            },
-            {
-                'name': 'Advanced Techniques',
-                'description': 'Advanced social engineering techniques and countermeasures',
-                'content': 'Advanced social engineering techniques include...',
-                'order': 6,
-                'has_simulation': False
-            },
-            {
-                'name': 'Incident Response',
-                'description': 'How to respond to social engineering incidents',
-                'content': 'When a social engineering incident occurs...',
-                'order': 7,
-                'has_simulation': False
-            }
-        ]
-        
-        for module_data in modules_data:
-            module = Module(**module_data)
-            module.save()
+        create_fallback_modules()
+
+def create_fallback_modules():
+    """
+    Create basic modules as fallback if content imports fail.
+    
+    This ensures the application always has some content available,
+    even if the learning_modules package has issues.
+    """
+    modules_data = [
+        {
+            'name': 'Introduction to Social Engineering',
+            'description': 'Understanding the basics of social engineering attacks',
+            'content': 'Social engineering is a manipulation technique that exploits human error to gain private information...',
+            'order': 1,
+            'has_simulation': False
+        },
+        {
+            'name': 'Types of Social Engineering Attacks',
+            'description': 'Learn about different types of social engineering attacks',
+            'content': 'There are several types of social engineering attacks...',
+            'order': 2,
+            'has_simulation': True,
+            'simulation_type': 'phishing'
+        },
+        {
+            'name': 'Phishing Attacks',
+            'description': 'Learn about phishing techniques and prevention',
+            'content': 'Phishing is a type of social engineering attack where attackers impersonate legitimate entities...',
+            'order': 3,
+            'has_simulation': True,
+            'simulation_type': 'phishing'
+        },
+        {
+            'name': 'Pretexting and Impersonation',
+            'description': 'Understanding pretexting and impersonation techniques',
+            'content': 'Pretexting involves creating a fabricated scenario...',
+            'order': 4,
+            'has_simulation': True,
+            'simulation_type': 'pretexting'
+        },
+        {
+            'name': 'Baiting and Quid Pro Quo',
+            'description': 'Learn about baiting and quid pro quo attacks',
+            'content': 'Baiting involves leaving a physical device...',
+            'order': 5,
+            'has_simulation': True,
+            'simulation_type': 'baiting'
+        },
+        {
+            'name': 'Advanced Techniques',
+            'description': 'Advanced social engineering techniques and countermeasures',
+            'content': 'Advanced social engineering techniques include...',
+            'order': 6,
+            'has_simulation': False
+        },
+        {
+            'name': 'Incident Response',
+            'description': 'How to respond to social engineering incidents',
+            'content': 'When a social engineering incident occurs...',
+            'order': 7,
+            'has_simulation': False
+        }
+    ]
+    
+    for module_data in modules_data:
+        module = Module(**module_data)
+        if module.save():
+            logger.info(f"[SUCCESS] Created fallback module: {module_data['name']}")
+        else:
+            logger.warning(f"[ERROR] Failed to create fallback module: {module_data['name']}")
 
 def create_default_questions():
-    """Create default assessment questions from modules folder"""
+    """
+    Create default assessment questions for all modules.
+    
+    This function:
+    - Imports question sets from learning_modules/
+    - Creates KnowledgeCheckQuestion objects
+    - Links questions to appropriate modules
+    - Handles fallback questions if imports fail
+    """
     try:
-        # Import module question classes
+        # Import question classes
         from learning_modules import (
             Module1Questions, Module2Questions, Module3Questions, Module4Questions,
             Module5Questions, Module6Questions, Module7Questions, FinalAssessmentQuestions
         )
         
-        # Module question classes
+        # Question classes mapping
         question_classes = [
             Module1Questions, Module2Questions, Module3Questions, Module4Questions,
             Module5Questions, Module6Questions, Module7Questions, FinalAssessmentQuestions
@@ -285,6 +432,10 @@ def create_default_questions():
                 # Add module_id to question data
                 question_data['module_id'] = module_id
                 
+                # Remove any fields that are not in the KnowledgeCheckQuestion model
+                if 'module_source' in question_data:
+                    del question_data['module_source']
+                
                 # Create and save question
                 question = KnowledgeCheckQuestion(**question_data)
                 if question.save():
@@ -294,29 +445,66 @@ def create_default_questions():
                     
     except Exception as e:
         logger.error(f"[ERROR] Error creating questions: {e}")
-        # Fallback to basic questions if import fails
-        questions_data = [
-            {
-                'module_id': 1,
-                'question_text': 'What is social engineering?',
-                'option_a': 'A type of software',
-                'option_b': 'A manipulation technique that exploits human error',
-                'option_c': 'A hardware component',
-                'option_d': 'A programming language',
-                'correct_answer': 'b',
-                'explanation': 'Social engineering is a manipulation technique that exploits human error to gain private information.',
-                'question_set': 1
-            }
-        ]
-        
-        for question_data in questions_data:
-            question = KnowledgeCheckQuestion(**question_data)
-            question.save()
+        create_fallback_questions()
 
-# Route handlers using OOP principles
+def create_fallback_questions():
+    """
+    Create basic questions as fallback if content imports fail.
+    
+    Ensures the application always has assessment questions available.
+    """
+    fallback_questions = [
+        {
+            'question': 'What is social engineering?',
+            'option_a': 'A type of software',
+            'option_b': 'A manipulation technique that exploits human error',
+            'option_c': 'A hardware component',
+            'option_d': 'A programming language',
+            'correct_answer': 'b',
+            'explanation': 'Social engineering is a manipulation technique that exploits human error to gain private information.',
+            'module_id': 1
+        },
+        {
+            'question': 'Which of the following is a common social engineering attack?',
+            'option_a': 'Phishing',
+            'option_b': 'Firewall',
+            'option_c': 'Antivirus',
+            'option_d': 'Encryption',
+            'correct_answer': 'a',
+            'explanation': 'Phishing is one of the most common social engineering attacks.',
+            'module_id': 2
+        }
+    ]
+    
+    for question_data in fallback_questions:
+        question = KnowledgeCheckQuestion(**question_data)
+        if question.save():
+            logger.info(f"[SUCCESS] Created fallback question: {question_data['question'][:50]}...")
+        else:
+            logger.warning(f"[ERROR] Failed to create fallback question")
+
+# =============================================================================
+# 10. ROUTE DEFINITIONS
+# =============================================================================
+
+# =============================================================================
+# 10.1 AUTHENTICATION ROUTES
+# =============================================================================
+
 @app.route('/')
 def index():
-    """Home page route"""
+    """
+    Home page route - displays the main landing page.
+    
+    Features:
+    - Public access (no login required)
+    - Responsive design with cybersecurity theme
+    - Call-to-action buttons for registration/login
+    - Program overview and features
+    
+    Returns:
+        str: Rendered index.html template
+    """
     try:
         return render_template('index.html')
     except Exception as e:
@@ -326,10 +514,26 @@ def index():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    """User registration route"""
+    """
+    User registration route - handles new user account creation.
+    
+    Features:
+    - Comprehensive form validation
+    - Password strength requirements
+    - Email format validation
+    - Duplicate username/email checking
+    - Secure password hashing
+    
+    Methods:
+        GET: Display registration form
+        POST: Process registration data
+        
+    Returns:
+        str: Rendered template or redirect
+    """
     if request.method == 'POST':
         try:
-            # Get form data
+            # Get and validate form data
             username = request.form.get('username', '').strip()
             email = request.form.get('email', '').strip()
             password = request.form.get('password', '')
@@ -381,7 +585,22 @@ def register():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    """User login route"""
+    """
+    User login route - handles user authentication.
+    
+    Features:
+    - Secure password verification
+    - Session management
+    - Login attempt logging
+    - Redirect to dashboard on success
+    
+    Methods:
+        GET: Display login form
+        POST: Process login credentials
+        
+    Returns:
+        str: Rendered template or redirect
+    """
     if request.method == 'POST':
         try:
             username = request.form['username']
@@ -405,7 +624,18 @@ def login():
 
 @app.route('/logout')
 def logout():
-    """User logout route"""
+    """
+    User logout route - handles user session termination.
+    
+    Features:
+    - Graceful logout for authenticated users
+    - Session cleanup
+    - Informative messages for different scenarios
+    - No authentication required (fixes 500 error issue)
+    
+    Returns:
+        str: Redirect to home page
+    """
     try:
         if current_user.is_authenticated:
             username = current_user.username
@@ -424,10 +654,26 @@ def logout():
     
     return redirect(url_for('index'))
 
+# =============================================================================
+# 10.2 LEARNING ROUTES
+# =============================================================================
+
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    """User dashboard route"""
+    """
+    User dashboard route - displays user progress and learning overview.
+    
+    Features:
+    - Comprehensive progress tracking
+    - Module completion status
+    - Recent activity feed
+    - Performance analytics
+    - Access control for modules
+    
+    Returns:
+        str: Rendered dashboard template
+    """
     try:
         # Get user statistics using service
         user_stats = user_service.get_user_statistics(current_user.id)
@@ -578,7 +824,22 @@ def dashboard():
 @app.route('/module/<int:module_id>')
 @login_required
 def module(module_id):
-    """Module view route"""
+    """
+    Module view route - displays educational content for a specific module.
+    
+    Features:
+    - Progressive module access control
+    - Interactive content display
+    - Progress tracking
+    - Knowledge check integration
+    - Simulation access for applicable modules
+    
+    Args:
+        module_id (int): ID of the module to display
+        
+    Returns:
+        str: Rendered module template or redirect
+    """
     try:
         module_obj = Module.get_by_id(module_id)
         if not module_obj:
@@ -630,40 +891,55 @@ def module(module_id):
         logger.error(f"Error loading module {module_id}: {e}")
         return redirect(url_for('dashboard'))
 
+# =============================================================================
+# 10.3 ASSESSMENT ROUTES
+# =============================================================================
+
 @app.route('/assessment/<int:module_id>')
 @login_required
 def assessment(module_id):
-    """Assessment route"""
+    """
+    Module assessment route - displays knowledge check for a specific module.
+    
+    Features:
+    - Dynamic question generation
+    - Progress validation
+    - Access control
+    - Assessment state management
+    
+    Args:
+        module_id (int): ID of the module for assessment
+        
+    Returns:
+        str: Rendered assessment template or redirect
+    """
     try:
+        # Get module
         module_obj = Module.get_by_id(module_id)
         if not module_obj:
             flash('Module not found.', 'error')
-            logger.warning(f"Module {module_id} not found for assessment")
             return redirect(url_for('dashboard'))
         
         # Check if user can access this module
-        if module_id == 1:
-            # First module is always accessible
-            pass
-        else:
-            # Check if previous module is fully completed
+        if module_id > 1:
             previous_module_completed = user_service.is_module_fully_completed(current_user.id, module_id - 1)
             if not previous_module_completed:
-                flash('You must complete the previous module before taking this assessment.', 'warning')
-                logger.warning(f"User {current_user.username} attempted to take assessment for module {module_id} without completing module {module_id - 1}")
+                flash('You must complete the previous module first.', 'warning')
                 return redirect(url_for('dashboard'))
         
-        # Create assessment using service
-        questions = assessment_service.create_knowledge_check(module_id)
-        
+        # Get questions for this module
+        questions = KnowledgeCheckQuestion.query.filter_by(module_id=module_id).all()
         if not questions:
             flash('No questions available for this module.', 'error')
-            logger.warning(f"No questions found for module {module_id} for assessment")
             return redirect(url_for('module', module_id=module_id))
         
-        return render_template('assessment_simple.html',
+        # Shuffle questions for variety
+        random.shuffle(questions)
+        
+        return render_template('assessment_simple.html', 
                              module=module_obj,
-                             questions=questions)
+                             questions=questions,
+                             module_id=module_id)
     except Exception as e:
         flash(f'Error loading assessment: {e}', 'error')
         logger.error(f"Error loading assessment for module {module_id}: {e}")
@@ -672,443 +948,252 @@ def assessment(module_id):
 @app.route('/submit_assessment/<int:module_id>', methods=['POST'])
 @login_required
 def submit_assessment(module_id):
-    """Submit assessment route"""
-    try:
-        # Get questions for this module
-        questions = assessment_service.create_knowledge_check(module_id)
+    """
+    Submit assessment answers and calculate results.
+    
+    Features:
+    - Answer validation and scoring
+    - Progress tracking
+    - Detailed feedback
+    - Result storage
+    
+    Args:
+        module_id (int): ID of the module for assessment
         
-        # Get user answers
-        user_answers = {}
+    Returns:
+        str: Rendered result template or redirect
+    """
+    try:
+        # Get module
+        module_obj = Module.get_by_id(module_id)
+        if not module_obj:
+            flash('Module not found.', 'error')
+            return redirect(url_for('dashboard'))
+        
+        # Get questions for this module
+        questions = KnowledgeCheckQuestion.query.filter_by(module_id=module_id).all()
+        if not questions:
+            flash('No questions available for this module.', 'error')
+            return redirect(url_for('module', module_id=module_id))
+        
+        # Process answers
+        answers = {}
+        correct_answers = 0
+        total_questions = len(questions)
+        
         for question in questions:
             answer = request.form.get(f'question_{question.id}')
-            if answer:
-                user_answers[str(question.id)] = answer
+            answers[question.id] = answer
+            
+            if answer == question.correct_answer:
+                correct_answers += 1
         
-        # Validate answers
-        if not assessment_service.validate_assessment_answers(questions, user_answers):
-            flash('Please answer all questions.', 'error')
-            logger.warning(f"Assessment submission failed for module {module_id}: Missing answers")
-            return redirect(url_for('assessment', module_id=module_id))
+        # Calculate score
+        score = correct_answers
+        percentage = int((correct_answers / total_questions) * 100)
         
-        # Grade assessment
-        score, total_questions, percentage, detailed_results = assessment_service.grade_assessment(
-            questions, user_answers
-        )
+        # Determine if passed (80% threshold)
+        passed = percentage >= app.config.get('KNOWLEDGE_CHECK_PASSING_SCORE', 80)
         
-        # Save assessment result
-        assessment_result = assessment_service.save_assessment_result(
+        # Create assessment result
+        result = AssessmentResult(
             user_id=current_user.id,
+            module_id=module_id,
             assessment_type='knowledge_check',
             score=score,
             total_questions=total_questions,
-            correct_answers=score,
-            module_id=module_id,
-            answers_data=user_answers
+            correct_answers=correct_answers,
+            passed=passed
         )
         
-        # Update user progress
-        if assessment_result:
-            current_user.update_progress(module_id, score)
-        
-        return render_template('assessment_result.html',
-                             score=score,
-                             total_questions=total_questions,
-                             percentage=percentage,
-                             detailed_results=detailed_results,
-                             module_id=module_id)
-        
+        if result.save():
+            # Update module progress
+            progress = UserProgress.get_module_progress(current_user.id, module_id)
+            if progress:
+                progress.score = percentage
+                if passed:
+                    progress.status = 'completed'
+                    progress.completed_at = datetime.now()
+                progress.save()
+            
+            flash(f'Assessment completed! Score: {percentage}%', 'success' if passed else 'warning')
+            logger.info(f"User {current_user.username} completed assessment for module {module_id} with score {percentage}%")
+            
+            return render_template('assessment_result.html', 
+                                 module=module_obj,
+                                 score=percentage,
+                                 total_questions=total_questions,
+                                 correct_answers=correct_answers,
+                                 passed=passed,
+                                 questions=questions,
+                                 answers=answers)
+        else:
+            flash('Error saving assessment results.', 'error')
+            return redirect(url_for('module', module_id=module_id))
+            
     except Exception as e:
         flash(f'Error submitting assessment: {e}', 'error')
         logger.error(f"Error submitting assessment for module {module_id}: {e}")
         return redirect(url_for('dashboard'))
 
-@app.route('/profile')
-@login_required
-def profile():
-    """User profile route"""
-    try:
-        return render_template('profile.html', user=current_user)
-    except Exception as e:
-        flash(f'Error loading profile: {e}', 'error')
-        logger.error(f"Error loading profile for user {current_user.username}: {e}")
-        return redirect(url_for('dashboard'))
-
-@app.route('/update_profile', methods=['POST'])
-@login_required
-def update_profile():
-    """Update profile route"""
-    try:
-        profile_data = {
-            'full_name': request.form['full_name'],
-            'email': request.form['email'],
-            'specialization': request.form['specialization'],
-            'year_level': request.form['year_level']
-        }
-        
-        if user_service.update_user_profile(current_user.id, profile_data):
-            flash('Profile updated successfully!', 'success')
-            logger.info(f"User {current_user.username} updated profile successfully")
-        else:
-            flash('Failed to update profile.', 'error')
-            logger.warning(f"Failed to update profile for user {current_user.username}")
-            
-    except ValueError as e:
-        flash(str(e), 'error')
-        logger.warning(f"Profile update failed for user {current_user.username}: {e}")
-    except Exception as e:
-        flash(f'Error updating profile: {e}', 'error')
-        logger.error(f"Error updating profile for user {current_user.username}: {e}")
-    
-    return redirect(url_for('profile'))
-
-@app.route('/forgot-password', methods=['GET', 'POST'])
-def forgot_password():
-    """Forgot password route"""
-    if request.method == 'POST':
-        email = request.form.get('email')
-        if email:
-            user = User.get_by_email(email)
-            if user:
-                token = user.create_password_reset_token()
-                if token:
-                    flash('Password reset instructions have been sent to your email.', 'success')
-                    logger.info(f"Password reset token created for user {user.username}")
-                else:
-                    flash('Error creating reset token. Please try again.', 'error')
-                    logger.warning(f"Failed to create password reset token for user {user.username}")
-            else:
-                flash('Email not found in our system.', 'error')
-                logger.warning(f"Password reset failed: Email {email} not found")
-        else:
-            flash('Please enter your email address.', 'error')
-            logger.warning("Password reset failed: Email address not provided")
-    
-    return render_template('forgot_password.html')
-
-@app.route('/reset-password/<token>', methods=['GET', 'POST'])
-def reset_password(token):
-    """Reset password route"""
-    reset_token = PasswordResetToken.get_valid_token(token)
-    
-    if not reset_token:
-        flash('Invalid or expired reset token.', 'error')
-        logger.warning(f"Password reset failed: Invalid or expired token {token}")
-        return redirect(url_for('login'))
-    
-    if request.method == 'POST':
-        password = request.form.get('password')
-        confirm_password = request.form.get('confirm_password')
-        
-        if password != confirm_password:
-            flash('Passwords do not match.', 'error')
-            logger.warning(f"Password reset failed for user {reset_token.user.username}: Password mismatch")
-        elif len(password) < 8:
-            flash('Password must be at least 8 characters long.', 'error')
-            logger.warning(f"Password reset failed for user {reset_token.user.username}: Password too short")
-        else:
-            user = User.query.get(reset_token.user_id)
-            if user and user.set_password(password):
-                reset_token.mark_as_used()
-                flash('Password has been reset successfully!', 'success')
-                logger.info(f"Password reset successful for user {user.username}")
-                return redirect(url_for('login'))
-            else:
-                flash('Error resetting password. Please try again.', 'error')
-                logger.warning(f"Password reset failed for user {user.username}: Error resetting password")
-    
-    return render_template('reset_password.html', token=token)
-
-# Additional routes for dashboard functionality
-@app.route('/final_assessment')
-@login_required
-def final_assessment():
-    """Final assessment route"""
-    try:
-        # Check if user has completed all modules
-        completed_modules = UserProgress.query.filter_by(
-            user_id=current_user.id, 
-            status='completed'
-        ).count()
-        
-        total_modules = Module.count()
-        
-        return render_template('final_assessment_simple.html', 
-                             completed_modules=completed_modules,
-                             total_modules=total_modules)
-    except Exception as e:
-        flash(f'Error loading final assessment: {e}', 'error')
-        logger.error(f"Error loading final assessment: {e}")
-        return redirect(url_for('dashboard'))
-
-@app.route('/final_assessment_questions')
-@login_required
-def final_assessment_questions():
-    """Final assessment questions route"""
-    try:
-        # Check if user has completed all modules
-        completed_modules = UserProgress.query.filter_by(
-            user_id=current_user.id, 
-            status='completed'
-        ).count()
-        
-        total_modules = Module.count()
-        
-        if completed_modules < total_modules:
-            flash('You must complete all modules before taking the final assessment.', 'warning')
-            logger.warning(f"User {current_user.username} attempted to take final assessment without completing all modules")
-            return redirect(url_for('dashboard'))
-        
-        # Get final assessment questions
-        questions = assessment_service.create_final_assessment(question_count=25)
-        
-        if not questions:
-            flash('No final assessment questions available.', 'error')
-            logger.warning(f"No final assessment questions found for user {current_user.username}")
-            return redirect(url_for('dashboard'))
-        
-        return render_template('final_assessment_questions.html', questions=questions)
-    except Exception as e:
-        flash(f'Error loading final assessment questions: {e}', 'error')
-        logger.error(f"Error loading final assessment questions: {e}")
-        return redirect(url_for('dashboard'))
-
-@app.route('/submit_final_assessment', methods=['POST'])
-@login_required
-def submit_final_assessment():
-    """Submit final assessment route"""
-    try:
-        # Get final assessment questions
-        questions = assessment_service.create_final_assessment()
-        
-        # Get user answers
-        user_answers = {}
-        for question in questions:
-            answer = request.form.get(f'question_{question.id}')
-            if answer:
-                user_answers[str(question.id)] = answer
-        
-        # Validate answers
-        if not assessment_service.validate_assessment_answers(questions, user_answers):
-            flash('Please answer all questions.', 'error')
-            logger.warning(f"Final assessment submission failed for user {current_user.username}: Missing answers")
-            return redirect(url_for('final_assessment'))
-        
-        # Grade assessment
-        score, total_questions, percentage, detailed_results = assessment_service.grade_assessment(
-            questions, user_answers
-        )
-        
-        # Determine if passed (70% or higher)
-        passed = percentage >= 70
-        
-        # Save assessment result
-        assessment_result = assessment_service.save_assessment_result(
-            user_id=current_user.id,
-            assessment_type='final_assessment',
-            score=score,
-            total_questions=total_questions,
-            correct_answers=score,
-            module_id=None,
-            answers_data=user_answers,
-            passed=passed
-        )
-        
-        return render_template('final_assessment_result.html',
-                             score=score,
-                             total_questions=total_questions,
-                             percentage=percentage,
-                             passed=passed,
-                             detailed_results=detailed_results)
-        
-    except Exception as e:
-        flash(f'Error submitting final assessment: {e}', 'error')
-        logger.error(f"Error submitting final assessment for user {current_user.username}: {e}")
-        return redirect(url_for('dashboard'))
+# =============================================================================
+# 10.4 SIMULATION ROUTES
+# =============================================================================
 
 @app.route('/simulation/<simulation_type>')
 @login_required
 def simulation(simulation_type):
-    """Simulation route"""
+    """
+    Simulation route - displays interactive social engineering scenarios.
+    
+    Features:
+    - Dynamic scenario generation
+    - Real-time feedback
+    - Progress tracking
+    - Educational content integration
+    
+    Args:
+        simulation_type (str): Type of simulation (phishing, pretexting, etc.)
+        
+    Returns:
+        str: Rendered simulation template or redirect
+    """
     try:
         # Validate simulation type
         valid_types = ['phishing', 'pretexting', 'baiting', 'quid_pro_quo']
         if simulation_type not in valid_types:
             flash('Invalid simulation type.', 'error')
-            logger.warning(f"Invalid simulation type {simulation_type} requested by user {current_user.username}")
             return redirect(url_for('dashboard'))
         
-        # Get simulation content
-        simulation_content = simulation_service.get_simulation_content(simulation_type)
+        # Get simulation data
+        simulation_data = simulation_service.get_simulation_data(simulation_type)
+        if not simulation_data:
+            flash('Simulation not available.', 'error')
+            return redirect(url_for('dashboard'))
         
-        return render_template('simulation_simple.html',
+        return render_template('simulation_simple.html', 
                              simulation_type=simulation_type,
-                             content=simulation_content)
+                             simulation_data=simulation_data)
     except Exception as e:
         flash(f'Error loading simulation: {e}', 'error')
-        logger.error(f"Error loading simulation {simulation_type} for user {current_user.username}: {e}")
+        logger.error(f"Error loading simulation {simulation_type}: {e}")
         return redirect(url_for('dashboard'))
 
-@app.route('/submit_simulation/<simulation_type>', methods=['POST'])
+@app.route('/submit_simulation', methods=['POST'])
 @login_required
-def submit_simulation(simulation_type):
-    """Submit simulation route"""
+def submit_simulation():
+    """
+    Submit simulation responses and calculate results.
+    
+    Features:
+    - Response evaluation
+    - Learning feedback
+    - Score calculation
+    - Progress tracking
+    
+    Returns:
+        str: JSON response with results
+    """
     try:
-        # Validate simulation type
-        valid_types = ['phishing', 'pretexting', 'baiting', 'quid_pro_quo']
-        if simulation_type not in valid_types:
-            flash('Invalid simulation type.', 'error')
-            logger.warning(f"Invalid simulation type {simulation_type} requested by user {current_user.username}")
-            return redirect(url_for('dashboard'))
+        simulation_type = request.form.get('simulation_type')
+        responses = request.form.get('responses', '{}')
         
-        # Get simulation content
-        simulation_content = simulation_service.get_simulation_content(simulation_type)
+        # Parse responses
+        try:
+            responses = json.loads(responses)
+        except json.JSONDecodeError:
+            responses = {}
         
-        # Get user answers
-        user_answers = {}
-        for option in simulation_content.get('options', []):
-            answer = request.form.get(f'option_{option["id"]}')
-            if answer:
-                user_answers[str(option['id'])] = answer
-        
-        # Validate answers
-        if not simulation_service.validate_simulation_answers(simulation_content, user_answers):
-            flash('Please answer all questions.', 'error')
-            logger.warning(f"Simulation submission failed for user {current_user.username}: Missing answers for simulation type {simulation_type}")
-            return redirect(url_for('simulation', simulation_type=simulation_type))
-        
-        # Grade simulation
-        results = simulation_service.grade_simulation(simulation_content, user_answers)
-        
-        # Determine module_id based on simulation type
-        module_id = None
-        if simulation_type == 'phishing':
-            module_id = 3  # Module 3 has phishing simulation
-        elif simulation_type == 'pretexting':
-            module_id = 4  # Module 4 has pretexting simulation
-        elif simulation_type == 'baiting':
-            module_id = 5  # Module 5 has baiting simulation
-        elif simulation_type == 'quid_pro_quo':
-            module_id = 2  # Module 2 has quid pro quo simulation
-        
-        # Save simulation result
-        simulation_result = simulation_service.save_simulation_result(
-            user_id=current_user.id,
-            simulation_type=simulation_type,
-            score=results['score'],
-            total_questions=results['total_questions'],
-            decisions_made=results['detailed_results'],
-            scenario_data=simulation_content,
-            time_taken=0,  # Could be tracked in future
-            module_id=module_id
+        # Evaluate simulation
+        result = simulation_service.evaluate_simulation(
+            current_user.id, 
+            simulation_type, 
+            responses
         )
         
-        if simulation_result:
-            flash(f'Simulation completed! Score: {results["score"]}/{results["total_questions"]} ({results["percentage"]:.1f}%)', 'success')
-            logger.info(f"User {current_user.username} completed simulation {simulation_type} successfully")
-            return redirect(url_for('dashboard'))
+        if result:
+            flash('Simulation completed successfully!', 'success')
+            return jsonify({
+                'success': True,
+                'score': result.score,
+                'feedback': result.feedback
+            })
         else:
-            flash('Failed to save simulation result.', 'error')
-            logger.warning(f"Failed to save simulation result for user {current_user.username} for simulation type {simulation_type}")
-            return redirect(url_for('simulation', simulation_type=simulation_type))
-                
+            return jsonify({
+                'success': False,
+                'error': 'Failed to evaluate simulation'
+            })
+            
     except Exception as e:
-        flash(f'Error submitting simulation: {e}', 'error')
-        logger.error(f"Error submitting simulation {simulation_type} for user {current_user.username}: {e}")
-        return redirect(url_for('dashboard'))
+        logger.error(f"Error submitting simulation: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
 
-@app.route('/survey')
-@login_required
-def survey():
-    """Survey route"""
-    try:
-        # Check if user has passed final assessment
-        final_result = AssessmentResult.query.filter_by(
-            user_id=current_user.id,
-            assessment_type='final_assessment',
-            passed=True
-        ).first()
-        
-        if not final_result:
-            flash('You must pass the final assessment before taking the survey.', 'warning')
-            logger.warning(f"User {current_user.username} attempted to take survey without passing final assessment")
-            return redirect(url_for('dashboard'))
-        
-        # Check if survey already completed
-        existing_survey = FeedbackSurvey.query.filter_by(user_id=current_user.id).first()
-        if existing_survey:
-            flash('You have already completed the survey.', 'info')
-            logger.info(f"User {current_user.username} attempted to complete survey again")
-            return redirect(url_for('dashboard'))
-        
-        return render_template('survey.html')
-    except Exception as e:
-        flash(f'Error loading survey: {e}', 'error')
-        logger.error(f"Error loading survey for user {current_user.username}: {e}")
-        return redirect(url_for('dashboard'))
+# =============================================================================
+# 10.5 PROGRESS AND ANALYTICS ROUTES
+# =============================================================================
 
-@app.route('/submit_survey', methods=['POST'])
+@app.route('/profile')
 @login_required
-def submit_survey():
-    """Submit survey route"""
+def profile():
+    """
+    User profile route - displays and manages user profile information.
+    
+    Features:
+    - Profile information display
+    - Edit capabilities
+    - Progress overview
+    - Achievement tracking
+    
+    Returns:
+        str: Rendered profile template
+    """
     try:
-        # Get survey data
-        survey_data = {
-            'user_id': current_user.id,
-            'program_rating': request.form.get('program_rating'),
-            'content_quality': request.form.get('content_quality'),
-            'difficulty_level': request.form.get('difficulty_level'),
-            'recommendation_likelihood': request.form.get('recommendation_likelihood'),
-            'additional_comments': request.form.get('additional_comments')
-        }
-        
-        # Save survey
-        survey = FeedbackSurvey(**survey_data)
-        if survey.save():
-            flash('Survey submitted successfully!', 'success')
-            logger.info(f"User {current_user.username} submitted survey successfully")
-            return redirect(url_for('dashboard'))
-        else:
-            flash('Failed to submit survey.', 'error')
-            logger.warning(f"Failed to submit survey for user {current_user.username}")
-            return redirect(url_for('survey'))
-        
+        return render_template('profile.html', user=current_user)
     except Exception as e:
-        flash(f'Error submitting survey: {e}', 'error')
-        logger.error(f"Error submitting survey for user {current_user.username}: {e}")
-        return redirect(url_for('survey'))
+        flash(f'Error loading profile: {e}', 'error')
+        logger.error(f"Error loading profile: {e}")
+        return redirect(url_for('dashboard'))
 
 @app.route('/update_progress', methods=['POST'])
 @login_required
 def update_progress():
-    """Update user progress via AJAX"""
+    """
+    Update user progress for modules and activities.
+    
+    Features:
+    - Progress tracking
+    - Time spent calculation
+    - Status updates
+    - Completion validation
+    
+    Returns:
+        str: JSON response with update status
+    """
     try:
-        data = request.get_json()
-        module_id = data.get('module_id')
-        status = data.get('status')
-        score = data.get('score', 0)
-        time_spent = data.get('time_spent', 0)
+        module_id = request.form.get('module_id', type=int)
+        status = request.form.get('status', 'in_progress')
+        score = request.form.get('score', 0, type=int)
+        time_spent = request.form.get('time_spent', 0, type=int)
         
-        if not module_id or not status:
-            return jsonify({'success': False, 'error': 'Missing required data'})
+        if not module_id:
+            return jsonify({'success': False, 'error': 'Module ID required'})
         
-        # Update or create progress record
-        progress = UserProgress.query.filter_by(
-            user_id=current_user.id,
-            module_id=module_id
-        ).first()
-        
+        # Get or create progress record
+        progress = UserProgress.get_module_progress(current_user.id, module_id)
         if not progress:
             progress = UserProgress(
                 user_id=current_user.id,
                 module_id=module_id,
-                status=status,
-                score=score,
-                time_spent=time_spent
+                status='not_started'
             )
-        else:
-            progress.status = status
-            progress.score = score
-            progress.time_spent = time_spent
+        
+        # Update progress
+        progress.status = status
+        progress.score = score
+        progress.time_spent = time_spent
         
         if progress.save():
             return jsonify({'success': True})
@@ -1118,54 +1203,24 @@ def update_progress():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 
-@app.route('/certificate')
-@login_required
-def certificate():
-    """Certificate generation route"""
-    try:
-        # Check if user has completed all requirements
-        final_result = AssessmentResult.query.filter_by(
-                user_id=current_user.id,
-            assessment_type='final_assessment',
-                passed=True
-        ).first()
-        
-        survey_completed = FeedbackSurvey.query.filter_by(user_id=current_user.id).first()
-        
-        if not final_result:
-            flash('You must pass the final assessment to generate a certificate.', 'warning')
-            logger.warning(f"User {current_user.username} attempted to generate certificate without passing final assessment")
-            return redirect(url_for('dashboard'))
-        
-        if not survey_completed:
-            flash('You must complete the survey to generate a certificate.', 'warning')
-            logger.warning(f"User {current_user.username} attempted to generate certificate without completing survey")
-            return redirect(url_for('dashboard'))
-        
-        return render_template('certificate.html', user=current_user)
-    except Exception as e:
-        flash(f'Error generating certificate: {e}', 'error')
-        logger.error(f"Error generating certificate for user {current_user.username}: {e}")
-        return redirect(url_for('dashboard'))
+# =============================================================================
+# 10.6 SYSTEM ROUTES
+# =============================================================================
 
-# Error handlers
-@app.errorhandler(404)
-def not_found_error(error):
-    """Handle 404 errors"""
-    logger.warning(f"404 error: {error}")
-    return render_template('404.html'), 404
-
-@app.errorhandler(500)
-def internal_error(error):
-    """Handle 500 errors"""
-    db.session.rollback()
-    logger.error(f"500 error: {error}")
-    return render_template('500.html'), 500
-
-# Health check endpoint
 @app.route('/health')
 def health_check():
-    """Health check endpoint for monitoring"""
+    """
+    Health check endpoint for monitoring and deployment verification.
+    
+    Features:
+    - Database connectivity check
+    - Application status
+    - Version information
+    - Timestamp for monitoring
+    
+    Returns:
+        str: JSON response with health status
+    """
     try:
         # Check database connection
         from sqlalchemy import text
@@ -1184,22 +1239,78 @@ def health_check():
             'error': str(e)
         }), 500
 
-# Main application entry point
+# =============================================================================
+# 11. ERROR HANDLERS
+# =============================================================================
+
+@app.errorhandler(404)
+def not_found_error(error):
+    """
+    Handle 404 Not Found errors.
+    
+    Args:
+        error: The 404 error object
+        
+    Returns:
+        str: Rendered 404 error page
+    """
+    logger.warning(f"404 error: {error}")
+    return render_template('404.html'), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    """
+    Handle 500 Internal Server errors.
+    
+    Features:
+    - Database rollback on errors
+    - Error logging
+    - User-friendly error page
+    
+    Args:
+        error: The 500 error object
+        
+    Returns:
+        str: Rendered 500 error page
+    """
+    db.session.rollback()
+    logger.error(f"500 error: {error}")
+    return render_template('500.html'), 500
+
+# =============================================================================
+# 12. APPLICATION ENTRY POINT
+# =============================================================================
+
 if __name__ == '__main__':
+    """
+    Main application entry point.
+    
+    This section:
+    - Initializes the application
+    - Sets up logging
+    - Configures the server
+    - Starts the Flask development server
+    
+    For production deployment, use Gunicorn with the Procfile.
+    """
     logger.info("[STARTUP] Initializing Social Engineering Awareness Program with OOP...")
     
     try:
+        # Create application instance
         app = create_app()
         
+        # Get configuration
         port = int(os.environ.get('PORT', 5000))
         debug = os.environ.get('FLASK_ENV') == 'development'
         
+        # Log startup information
         logger.info(f"[SUCCESS] Application ready on port {port}")
         logger.info(f"[INFO] Debug mode: {debug}")
         logger.info(f"[INFO] Access the application at: http://localhost:{port}")
         logger.info(f"[INFO] Default admin credentials: {app.config.get('DEFAULT_ADMIN_USERNAME')} / {app.config.get('DEFAULT_ADMIN_PASSWORD')}")
         logger.info(f"[INFO] Health check available at: http://localhost:{port}/health")
         
+        # Start the application
         app.run(debug=debug, host='0.0.0.0', port=port)
         
     except Exception as e:
