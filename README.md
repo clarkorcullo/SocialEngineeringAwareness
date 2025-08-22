@@ -1,316 +1,581 @@
-<<<<<<< HEAD
-# Social Engineering Awareness Program
+# 🛡️ Social Engineering Awareness Program
 
-A production-ready, OOP‑driven Flask application that delivers interactive learning on social engineering threats, defenses, and incident response. The system provides a structured curriculum with knowledge checks, real‑world simulations, analytics, and certification.
+A **production-ready, enterprise-grade Flask application** that delivers comprehensive interactive learning on social engineering threats, defenses, and incident response. Built with modern software engineering practices, this platform provides a structured curriculum with knowledge checks, real-world simulations, advanced analytics, and professional certification.
 
-Repository: [`clarkorcullo/Social-Engineering-Awareness`](https://github.com/clarkorcullo/Social-Engineering-Awareness)
+**🌐 Live Demo**: [social-engineering-awareness.onrender.com](https://social-engineering-awareness.onrender.com/)
 
-## 🚀 Overview
+**📚 Repository**: [clarkorcullo/SocialEngineeringAwareness](https://github.com/clarkorcullo/SocialEngineeringAwareness)
 
-This platform guides learners through seven modules and a final assessment, enforcing completion rules and offering realistic practice via simulations (Phishing, Pretexting, Baiting, Quid Pro Quo). It tracks progress, scores, time spent, and recent activity, and supports survey and certificate generation upon completion.
+---
 
-Key principles:
-- Clean separation of concerns via a service layer (`business_services/`) and data models (`data_models/`).
-- Content is code-first and versioned in `learning_modules/`.
-- Simulations follow a Base → Concrete OOP pattern in `simulations/`.
+## 🎯 Project Overview
 
-## 🌐 Live Deployment
+This educational platform guides learners through **seven comprehensive modules** and a final assessment, enforcing strict completion rules and offering realistic practice via **four types of simulations** (Phishing, Pretexting, Baiting, Quid Pro Quo). The system tracks detailed progress, scores, time spent, and recent activity, supporting survey collection and certificate generation upon completion.
 
-This project is live at [social-engineering-awareness.onrender.com](https://social-engineering-awareness.onrender.com/).
+### 🏗️ Architecture Principles
+- **Clean Architecture**: Separation of concerns via service layer (`business_services/`) and data models (`data_models/`)
+- **Content-First Design**: Educational content is code-first and versioned in `learning_modules/`
+- **OOP Patterns**: Simulations follow Base → Concrete OOP pattern in `simulations/`
+- **Production Ready**: Enterprise-grade logging, error handling, and monitoring
+
+---
+
+## 🚀 Key Features
+
+### 📚 **Comprehensive Learning Modules**
+- **7 Progressive Modules**: From basic concepts to advanced incident response
+- **Sequential Unlocking**: Each module requires previous completion
+- **Knowledge Checks**: 5 questions per module with detailed feedback
+- **Interactive Content**: Rich HTML content with practical examples
+
+### 🎮 **Real-World Simulations**
+- **4 Simulation Types**: Phishing, Pretexting, Baiting, Quid Pro Quo
+- **OOP Design**: `BaseSimulation` + specific implementations
+- **Real-time Feedback**: Red-flag explanations and learning points
+- **Scenario-Based**: Authentic social engineering scenarios
+
+### 📊 **Advanced Assessment System**
+- **Module Knowledge Checks**: 5 questions/module, unlimited retakes
+- **Final Assessment**: 25 questions, 3 retakes every 48 hours
+- **Automatic Grading**: Percentage computation and attempts tracking
+- **Progress Analytics**: Detailed completion metrics and time tracking
+
+### 👤 **Professional User Management**
+- **Secure Registration**: Comprehensive validation and security checks
+- **Flask-Login Integration**: Robust authentication system
+- **Profile Management**: Avatar uploads and detailed user profiles
+- **Progress Tracking**: Consistent progress monitoring across all activities
+
+### 📈 **Enterprise Analytics & Reporting**
+- **Completion Metrics**: Rate, average scores, simulations completed
+- **Time Analytics**: Detailed time spent tracking
+- **Activity Feeds**: Recent activities and achievements
+- **Certificate Generation**: Professional completion certificates
+
+---
+
+## 🏗️ Technology Stack
+
+### **Backend Technologies**
+- **Flask 2.3.3**: Modern Python web framework
+- **SQLAlchemy 2.0.23**: Advanced ORM with type safety
+- **Flask-Login 0.6.3**: Secure authentication system
+- **Werkzeug 2.3.7**: WSGI utilities and security features
+
+### **Frontend Technologies**
+- **Bootstrap 5**: Modern, responsive UI framework
+- **HTML5/CSS3**: Semantic markup and advanced styling
+- **JavaScript**: Interactive functionality and dynamic content
+- **Font Awesome**: Professional iconography
+
+### **Architecture & Design**
+- **Object-Oriented Programming**: Clean, maintainable code structure
+- **Service Layer Pattern**: Business logic encapsulation
+- **Repository Pattern**: Data access abstraction
+- **Factory Pattern**: Flexible application configuration
+
+### **Production Features**
+- **Gunicorn**: Production WSGI server
+- **Comprehensive Logging**: File and console output
+- **Health Monitoring**: `/health` endpoint for monitoring
+- **Error Handling**: Professional error pages and logging
+
+---
 
 ## 📁 Project Structure
 
 ```
 CapstoneProject/
-├── app.py                          # Main Flask application
-├── requirements.txt                # Python dependencies
-├── runtime.txt                     # Python runtime version
-├── Procfile                        # Heroku deployment configuration
-├── .gitignore                      # Git ignore rules
-├── README.md                       # This documentation file
-├── reload_modules.py               # Script to reload module content
+├── 🚀 Core Application
+│   ├── app.py                          # Main Flask application (1,196 lines)
+│   ├── config.py                       # Environment-based configuration
+│   ├── manage.py                       # Database management utilities
+│   ├── requirements.txt                # Python dependencies
+│   ├── runtime.txt                     # Python 3.9.18 specification
+│   ├── Procfile                        # Render deployment configuration
+│   └── .gitignore                      # Git ignore rules
 │
-├── data_models/                    # Database models and data structures
-│   ├── __init__.py
-│   ├── base_models.py              # Base model classes and mixins
-│   ├── user_models.py              # User and authentication models
-│   ├── content_models.py           # Module and content models
-│   └── progress_models.py          # Progress tracking models
+├── 🗄️ Data Layer
+│   └── data_models/                    # Database models and ORM
+│       ├── __init__.py                 # Model exports
+│       ├── base_models.py              # Base classes and mixins
+│       ├── user_models.py              # User and authentication models
+│       ├── content_models.py           # Module and content models
+│       └── progress_models.py          # Progress tracking models
 │
-├── business_services/              # Business logic and service layer
-│   ├── __init__.py
-│   ├── user_service.py             # User management services
-│   ├── module_service.py           # Module management services
-│   ├── assessment_service.py       # Assessment and grading services
-│   ├── simulation_service.py       # Simulation management services
-│   ├── progress_service.py         # Progress tracking services
-│   ├── analytics_service.py        # Analytics and reporting services
-│   └── module_manager_service.py   # Module coordination services
+├── ⚙️ Business Logic
+│   └── business_services/              # Service layer architecture
+│       ├── __init__.py                 # Service exports
+│       ├── user_service.py             # User management (304 lines)
+│       ├── module_service.py           # Module management (276 lines)
+│       ├── assessment_service.py       # Assessment and grading (271 lines)
+│       ├── simulation_service.py       # Simulation management (206 lines)
+│       ├── progress_service.py         # Progress tracking (358 lines)
+│       ├── analytics_service.py        # Analytics and reporting (424 lines)
+│       └── module_manager_service.py   # Module coordination (348 lines)
 │
-├── learning_modules/               # Learning content and questions
-│   ├── __init__.py
-│   ├── module1.py                  # Introduction to Social Engineering
-│   ├── module2.py                  # Types of Social Engineering Attacks
-│   ├── module3.py                  # Phishing Detection and Prevention
-│   ├── module4.py                  # Password Security and Authentication
-│   ├── module5.py                  # Social Media Security
-│   ├── module6.py                  # Physical Security and Social Engineering
-│   ├── module7.py                  # Incident Response and Reporting
-│   └── final_assessment.py         # Final assessment content
+├── 📚 Educational Content
+│   └── learning_modules/               # Learning content and questions
+│       ├── __init__.py                 # Content exports
+│       ├── module1.py                  # Introduction to Social Engineering
+│       ├── module2.py                  # Types of Social Engineering Attacks
+│       ├── module3.py                  # Phishing Detection and Prevention
+│       ├── module4.py                  # Password Security and Authentication
+│       ├── module5.py                  # Social Media Security
+│       ├── module6.py                  # Physical Security and Social Engineering
+│       ├── module7.py                  # Incident Response and Reporting
+│       └── final_assessment.py         # Final assessment content
 │
-├── helper_utilities/               # Utility functions and data structures
-│   ├── __init__.py
-│   ├── constants.py                # Application constants
-│   ├── data_structures.py          # Custom data structures (LinkedList, Stack, etc.)
-│   ├── formatters.py               # Data formatting utilities
-│   └── validators.py               # Input validation utilities
+├── 🎮 Interactive Simulations
+│   └── simulations/                    # Simulation engine
+│       ├── __init__.py                 # Simulation exports
+│       ├── base_simulation.py          # Base simulation class
+│       ├── phishing_simulation.py      # Phishing scenarios
+│       ├── pretexting_simulation.py    # Pretexting scenarios
+│       ├── baiting_simulation.py       # Baiting scenarios
+│       └── quid_pro_quo_simulation.py  # Quid pro quo scenarios
 │
-├── templates/                      # HTML templates
-│   ├── base.html                   # Base template
-│   ├── index.html                  # Home page
-│   ├── login.html                  # Login page
-│   ├── register.html               # Registration page
-│   ├── dashboard.html              # User dashboard
-│   ├── module.html                 # Module content page
-│   ├── assessment_simple.html      # Assessment interface
-│   ├── simulation_simple.html      # Simulation interface
-│   ├── final_assessment_simple.html # Final assessment interface
-│   ├── survey.html                 # Feedback survey
-│   ├── certificate.html            # Certificate generation
-│   ├── profile.html                # User profile
-│   ├── forgot_password.html        # Password reset
-│   ├── reset_password.html         # Password reset confirmation
-│   ├── 404.html                    # Error page
-│   └── 500.html                    # Server error page
+├── 🛠️ Utilities
+│   └── helper_utilities/               # Utility functions and helpers
+│       ├── __init__.py                 # Utility exports
+│       ├── constants.py                # Application constants (395 lines)
+│       ├── formatters.py               # Data formatting utilities (311 lines)
+│       └── validators.py               # Input validation utilities (269 lines)
 │
-├── static/                         # Static assets
-│   ├── MMDCLogo.png               # MMDC logo
-│   ├── SEALogo.png                # Social Engineering Awareness logo
-│   ├── Background.png             # Background image
-│   └── profile_pictures/          # User profile pictures
+├── 🎨 User Interface
+│   ├── templates/                      # HTML templates (19 files)
+│   │   ├── base.html                   # Base template with navigation
+│   │   ├── index.html                  # Home page (617 lines)
+│   │   ├── login.html                  # Login interface
+│   │   ├── register.html               # Registration form (518 lines)
+│   │   ├── dashboard.html              # User dashboard (434 lines)
+│   │   ├── module.html                 # Module content (1,159 lines)
+│   │   ├── assessment_simple.html      # Assessment interface
+│   │   ├── simulation_simple.html      # Simulation interface
+│   │   ├── final_assessment_simple.html # Final assessment
+│   │   ├── survey.html                 # Feedback survey
+│   │   ├── certificate.html            # Certificate generation
+│   │   ├── profile.html                # User profile (348 lines)
+│   │   ├── forgot_password.html        # Password reset
+│   │   ├── reset_password.html         # Password reset confirmation
+│   │   ├── 404.html                    # Error page
+│   │   └── 500.html                    # Server error page
+│   │
+│   └── static/                         # Static assets
+│       ├── MMDCLogo.png               # MMDC logo
+│       ├── SEALogo.png                # Social Engineering Awareness logo
+│       ├── Background.png             # Background image
+│       └── profile_pictures/          # User profile pictures
 │
-└── instance/                       # Database and instance files
-    └── social_engineering_awareness.db
+└── 📄 Documentation
+    ├── README.md                       # This comprehensive documentation
+    └── LICENSE                         # MIT License
 ```
 
-## 🎯 Core Features
+---
 
-### 📚 Learning Modules
-- 7 comprehensive modules with practical examples and guidance
-- Progressive unlocking: each module requires the previous one to be fully completed
-- Knowledge checks per module with detailed feedback
+## 🎓 Learning Modules Overview
 
-### 🎮 Interactive Simulations
-- Phishing, Pretexting, Baiting, Quid Pro Quo
-- OOP design: `BaseSimulation` + specific implementations
-- Real-time feedback with red‑flag explanations
+### **Module 1: Introduction to Social Engineering**
+- **Content**: Basic concepts, psychology, and fundamental principles
+- **Topics**: Why social engineering works, common targets, impacts
+- **Assessment**: 5 knowledge check questions
+- **Simulation**: None (foundational module)
 
-### 📊 Assessment System
-- Module Knowledge Checks: 5 questions/module, unlimited retakes
-- Final Assessment: 25 questions, 3 retakes allowed every 48 hours
-- Automatic grading, percentage computation, attempts tracking
-- Recent activity feed (assessments, simulations, completions)
+### **Module 2: Types of Social Engineering Attacks**
+- **Content**: Comprehensive attack type overview
+- **Topics**: Phishing, pretexting, baiting, quid pro quo, tailgating
+- **Assessment**: 5 knowledge check questions
+- **Simulation**: Quid Pro Quo scenario
 
-### 👤 User Management
-- Registration with validation, secure authentication (Flask‑Login)
-- Profile updates, avatars, and consistent progress tracking
+### **Module 3: Phishing Detection and Prevention**
+- **Content**: Email and web-based phishing techniques
+- **Topics**: Email phishing identification, website spoofing detection
+- **Assessment**: 5 knowledge check questions
+- **Simulation**: Phishing email scenario
 
-### 📈 Analytics & Reporting
-- Completion rate, average scores, simulations done, and time spent
-- Survey and certificate unlocking based on completion rules
+### **Module 4: Password Security and Authentication**
+- **Content**: Modern authentication security
+- **Topics**: Strong password creation, MFA, security best practices
+- **Assessment**: 5 knowledge check questions
+- **Simulation**: Pretexting scenario
 
-## 🛠️ Technology Stack
+### **Module 5: Social Media Security**
+- **Content**: Social media privacy and security
+- **Topics**: Privacy settings, information sharing risks, attack vectors
+- **Assessment**: 5 knowledge check questions
+- **Simulation**: Baiting scenario
 
-- **Backend**: Flask (Python)
-- **Database**: SQLite with SQLAlchemy ORM
-- **Authentication**: Flask-Login
-- **Frontend**: HTML5, CSS3, Bootstrap 5, JavaScript
-- **Architecture**: Object-Oriented Programming (OOP)
-- **Design Patterns**: Service Layer, Repository Pattern, Factory Pattern
+### **Module 6: Physical Security and Social Engineering**
+- **Content**: Physical access control and environmental security
+- **Topics**: Physical access control, in-person social engineering
+- **Assessment**: 5 knowledge check questions
+- **Simulation**: None (theoretical focus)
 
-## ✅ Completion Rules (Access Control)
-- A module is considered fully completed when:
-  - Knowledge check score ≥ 80% (configurable) AND
-  - Simulation completed when the module includes one (Modules 2–5)
-- Modules unlock sequentially. Final Assessment unlocks only after all modules are completed.
+### **Module 7: Incident Response and Reporting**
+- **Content**: Professional incident response procedures
+- **Topics**: Incident detection, response procedures, reporting protocols
+- **Assessment**: 5 knowledge check questions
+- **Simulation**: None (procedural focus)
+
+### **Final Assessment**
+- **Content**: Comprehensive evaluation of all modules
+- **Format**: 25 questions covering all topics
+- **Requirements**: All modules must be completed
+- **Attempts**: 3 attempts allowed every 48 hours
+
+---
+
+## ✅ Completion Rules & Access Control
+
+### **Module Completion Requirements**
+A module is considered **fully completed** when:
+- ✅ **Knowledge Check Score** ≥ 80% (configurable)
+- ✅ **Simulation Completed** (when module includes one - Modules 2-5)
+- ✅ **Content Reviewed** (all sections accessed)
+
+### **Progressive Unlocking System**
+- 🔒 **Module 1**: Always accessible
+- 🔒 **Modules 2-7**: Require previous module completion
+- 🔒 **Final Assessment**: Requires all modules completed
+- 🔒 **Certificate**: Requires final assessment passed + survey completed
+
+### **Assessment Rules**
+- 📝 **Knowledge Checks**: Unlimited retakes, 80% passing score
+- 📝 **Final Assessment**: 3 attempts every 48 hours, 70% passing score
+- 📝 **Simulations**: One attempt per simulation type
+- 📝 **Progress Tracking**: Automatic saving and resume capability
+
+---
 
 ## 🚀 Getting Started
 
-### Prerequisites
-- Python 3.8 or higher
-- pip (Python package installer)
+### **Prerequisites**
+- **Python 3.9+** (specified in runtime.txt)
+- **pip** (Python package installer)
+- **Git** (for version control)
 
-### Installation
+### **Installation Steps**
 
-1. **Clone the repository**
+1. **Clone the Repository**
    ```bash
-   git clone <repository-url>
-   cd CapstoneProject
+   git clone https://github.com/clarkorcullo/SocialEngineeringAwareness.git
+   cd SocialEngineeringAwareness
    ```
 
-2. **Install dependencies**
+2. **Install Dependencies**
    ```bash
    pip install -r requirements.txt
    ```
 
-3. **Run the application**
+3. **Run the Application**
    ```bash
    python app.py
    ```
 
-4. **Access the application**
-   - Open your browser and go to `http://localhost:5000`
-   - Login with default admin credentials:
+4. **Access the Application**
+   - Open browser: `http://localhost:5000`
+   - **Default Admin Credentials**:
      - Username: `administrator`
-     - Password: `Admin123!@#`
+     - Password: `Admin123!@#2025`
 
-### Database Setup
-
-The application automatically creates the database and loads content on first run. If you need to reload the module content:
-
-```bash
-python reload_modules.py
-```
-
-## 🧠 Content, Questions, and Simulations
-- Edit learning content and questions in `learning_modules/`. Each module exposes content and a question factory.
-- Simulations live in `simulations/` with a shared `BaseSimulation` API and per‑type logic.
-- The app bootstraps modules and questions on first run and can be reloaded via `reload_modules.py`.
-
-## 📋 Learning Modules
-
-1. **Introduction to Social Engineering**
-   - Basic concepts and psychology
-   - Why social engineering works
-   - Common targets and impacts
-
-2. **Types of Social Engineering Attacks**
-   - Phishing, pretexting, baiting
-   - Quid pro quo and tailgating
-   - Attack vectors and techniques
-
-3. **Phishing Detection and Prevention**
-   - Email phishing identification
-   - Website spoofing detection
-   - Prevention strategies
-
-4. **Password Security and Authentication**
-   - Strong password creation
-   - Multi-factor authentication
-   - Security best practices
-
-5. **Social Media Security**
-   - Privacy settings and controls
-   - Information sharing risks
-   - Social media attack vectors
-
-6. **Physical Security and Social Engineering**
-   - Physical access control
-   - Social engineering in person
-   - Environmental security
-
-7. **Incident Response and Reporting**
-   - Incident detection
-   - Response procedures
-   - Reporting protocols
-
-## 🧩 Architecture Notes
-- `app.py` defines routes and wires services to templates.
-- `data_models/` contains SQLAlchemy models (Users, Modules, Progress, Assessments, Simulations).
-- `business_services/` encapsulates domain logic (assessment creation/validation, progress rules, analytics, simulations orchestration, user access checks).
-- `templates/` are presentation-only; heavy logic is in services. The dashboard is fed by the `/dashboard` route.
-
-## 📊 Dashboard Metrics
-- Modules Completed vs Total Modules
-- Simulations Completed
-- Average Score (assessments)
-- Time Spent (aggregated from progress)
-- Final Assessment readiness, survey/certificate status, recent activities
-
-## 🔧 Configuration
-
-### Environment Variables
-- `FLASK_ENV`: Set to 'development' for debug mode
-- `PORT`: Application port (default: 5000)
-- `RENDER`: Set for deployment on Render platform
-
-### Database Configuration
-- **Development**: SQLite database in `instance/` folder
-- **Production**: Can be configured for PostgreSQL or MySQL
-
-## 🚀 Deployment
-
-### Local Development
-```bash
-python app.py
-```
-
-### Production Deployment
-The application includes configuration for:
-- **Heroku**: Use the provided `Procfile`
-- **Render**: Configured for cloud deployment
-- **Docker**: Can be containerized for deployment
-
-### Render + GitHub
-- The repository `main` branch is deployable to Render. A force‑push will roll the environment forward.
-
-<!-- Screenshots/GIF section removed to avoid 404s on GitHub when files are absent. -->
-
-## 📊 API Endpoints
-
-### Authentication
-- `POST /login` - User login
-- `POST /register` - User registration
-- `GET /logout` - User logout
-
-### Learning
-- `GET /dashboard` - User dashboard
-- `GET /module/<id>` - Module content
-- `GET /assessment/<id>` - Module assessment
-- `POST /submit_assessment/<id>` - Submit assessment
-
-### Simulations
-- `GET /simulation/<type>` - Access simulation
-- `POST /submit_simulation` - Submit simulation results
-
-### Progress
-- `POST /update_progress` - Update user progress
-- `GET /profile` - User profile
-- `POST /update_profile` - Update profile
-
-## 🧪 Testing & Quality
-- Service‑level boundaries make business logic testable in isolation.
-- Templates avoid DB queries; data should be provided via routes.
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-## 📄 License
-
-This project is licensed under the MIT License. See the [`LICENSE`](LICENSE) file for details.
-
-## 🆘 Support
-
-For support and questions:
-- Check the documentation in each module
-- Review the code comments
-- Create an issue in the repository
-
-## 🎉 Acknowledgments
-
-- Built for educational purposes
-- Designed to raise awareness about social engineering
-- Promotes cybersecurity best practices
+### **Database Setup**
+The application automatically:
+- ✅ Creates database on first run
+- ✅ Loads all educational content
+- ✅ Creates default admin user
+- ✅ Initializes all modules and questions
 
 ---
 
-**Note**: This application is for educational use to raise awareness about social engineering attacks and prevention strategies.
-=======
-# SocialEngineeringAwareness
-A Capstone Project
->>>>>>> 1070d8cd1e2f97b8a84357282c35cb161e480ad0
+## 🔧 Configuration
+
+### **Environment Variables**
+```bash
+# Essential Configuration
+SECRET_KEY=your-secure-secret-key-here
+FLASK_ENV=production
+PORT=5000
+
+# Admin Configuration
+ADMIN_EMAIL=admin@mmdc.edu.ph
+ADMIN_PASSWORD=Admin123!@#2025
+
+# Logging Configuration
+LOG_LEVEL=INFO
+LOG_FILE=app.log
+
+# Render Deployment
+RENDER=true  # Automatically set by Render platform
+```
+
+### **Database Configuration**
+- **Development**: SQLite database in `instance/` folder
+- **Production**: SQLite on `/tmp/` (Render) or PostgreSQL
+- **Testing**: In-memory SQLite database
+
+### **Security Configuration**
+- **Password Requirements**: 12+ characters, uppercase, lowercase, numbers
+- **Session Security**: Secure cookies, HTTP-only, SameSite
+- **CSRF Protection**: Built-in Flask-WTF protection
+- **Input Validation**: Comprehensive validation on all inputs
+
+---
+
+## 🚀 Deployment
+
+### **Render Deployment (Recommended)**
+1. **Connect GitHub Repository** to Render
+2. **Create Web Service** with Python environment
+3. **Set Environment Variables**:
+   ```bash
+   SECRET_KEY=your-secure-secret-key
+   FLASK_ENV=production
+   ADMIN_EMAIL=your-admin-email
+   ADMIN_PASSWORD=your-secure-password
+   ```
+4. **Deploy**: Automatic deployment from GitHub
+
+### **Local Development**
+```bash
+# Development mode
+export FLASK_ENV=development
+python app.py
+
+# Production mode
+export FLASK_ENV=production
+gunicorn app:app
+```
+
+### **Docker Deployment**
+```dockerfile
+FROM python:3.9.18-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+EXPOSE 5000
+CMD ["gunicorn", "app:app"]
+```
+
+---
+
+## 📊 API Endpoints
+
+### **Authentication Endpoints**
+- `GET /` - Home page
+- `GET /login` - Login page
+- `POST /login` - User authentication
+- `GET /register` - Registration page
+- `POST /register` - User registration
+- `GET /logout` - User logout
+- `GET /forgot_password` - Password reset request
+- `POST /reset_password/<token>` - Password reset
+
+### **Learning Endpoints**
+- `GET /dashboard` - User dashboard with progress
+- `GET /module/<id>` - Module content and progress
+- `GET /assessment/<id>` - Module knowledge check
+- `POST /submit_assessment/<id>` - Submit assessment answers
+- `GET /final_assessment` - Final assessment access
+- `POST /submit_final_assessment` - Submit final assessment
+
+### **Simulation Endpoints**
+- `GET /simulation/<type>` - Access simulation
+- `POST /submit_simulation` - Submit simulation results
+- `GET /simulation_result/<id>` - View simulation results
+
+### **Progress & Profile Endpoints**
+- `POST /update_progress` - Update module progress
+- `GET /profile` - User profile page
+- `POST /update_profile` - Update user profile
+- `GET /certificate` - Generate completion certificate
+
+### **System Endpoints**
+- `GET /health` - Health check for monitoring
+- `GET /survey` - Feedback survey
+- `POST /submit_survey` - Submit survey responses
+
+---
+
+## 🧪 Testing & Quality Assurance
+
+### **Code Quality**
+- ✅ **Type Hints**: Full Python type annotation
+- ✅ **Documentation**: Comprehensive docstrings
+- ✅ **Error Handling**: Professional exception management
+- ✅ **Logging**: Structured logging with multiple handlers
+
+### **Security Testing**
+- ✅ **Input Validation**: All user inputs validated
+- ✅ **Authentication**: Secure login/logout system
+- ✅ **Authorization**: Role-based access control
+- ✅ **SQL Injection**: ORM prevents injection attacks
+- ✅ **XSS Protection**: Template escaping enabled
+
+### **Performance Testing**
+- ✅ **Database Optimization**: Proper indexing and queries
+- ✅ **Caching**: Template and query optimization
+- ✅ **Memory Management**: Proper resource cleanup
+- ✅ **Response Times**: Optimized routing and processing
+
+---
+
+## 📈 Analytics & Monitoring
+
+### **Health Monitoring**
+- **Health Check**: `/health` endpoint for uptime monitoring
+- **Database Status**: Connection verification
+- **Application Metrics**: Version and status information
+
+### **User Analytics**
+- **Progress Tracking**: Module completion rates
+- **Assessment Scores**: Performance analytics
+- **Time Analytics**: Learning time tracking
+- **Activity Feeds**: Recent user activities
+
+### **System Analytics**
+- **Error Logging**: Comprehensive error tracking
+- **Performance Metrics**: Response time monitoring
+- **Usage Statistics**: User engagement analytics
+
+---
+
+## 🤝 Contributing
+
+### **Development Setup**
+1. **Fork the Repository**
+2. **Create Feature Branch**: `git checkout -b feature/amazing-feature`
+3. **Make Changes**: Follow coding standards
+4. **Test Thoroughly**: Ensure all functionality works
+5. **Submit Pull Request**: Detailed description of changes
+
+### **Coding Standards**
+- **Python**: PEP 8 compliance
+- **Type Hints**: Required for all functions
+- **Documentation**: Docstrings for all classes/methods
+- **Testing**: Unit tests for new features
+
+### **Commit Guidelines**
+- **Conventional Commits**: Use standard commit format
+- **Descriptive Messages**: Clear commit descriptions
+- **Atomic Commits**: One change per commit
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+
+**MIT License Benefits**:
+- ✅ **Commercial Use**: Can be used in commercial projects
+- ✅ **Modification**: Can be modified and distributed
+- ✅ **Distribution**: Can be distributed freely
+- ✅ **Attribution**: Requires license and copyright notice
+
+---
+
+## 🆘 Support & Troubleshooting
+
+### **Common Issues**
+
+#### **Database Connection Issues**
+```bash
+# Reset database
+python manage.py reset_database
+
+# Create admin user
+python manage.py create_admin username email password
+```
+
+#### **Module Loading Issues**
+```bash
+# Check module content
+python manage.py list_modules
+
+# Verify questions
+python manage.py list_questions
+```
+
+#### **Deployment Issues**
+```bash
+# Check health endpoint
+curl https://your-app.onrender.com/health
+
+# Verify environment variables
+echo $SECRET_KEY
+echo $FLASK_ENV
+```
+
+### **Getting Help**
+- 📖 **Documentation**: Check this README and code comments
+- 🐛 **Issues**: Create detailed issue reports
+- 💬 **Discussions**: Use GitHub discussions for questions
+- 📧 **Contact**: Reach out to project maintainers
+
+---
+
+## 🎉 Acknowledgments
+
+### **Educational Institutions**
+- **Mapúa Malayan Digital College (MMDC)**: Academic support and guidance
+- **Faculty Advisors**: Technical and educational oversight
+
+### **Technology Stack**
+- **Flask Community**: Excellent web framework
+- **Bootstrap Team**: Beautiful UI components
+- **Open Source Contributors**: Various libraries and tools
+
+### **Security Community**
+- **Cybersecurity Experts**: Content validation and review
+- **Social Engineering Researchers**: Educational content accuracy
+- **Security Awareness Advocates**: Best practices and guidelines
+
+---
+
+## 🔮 Future Enhancements
+
+### **Planned Features**
+- 🔄 **Multi-language Support**: Internationalization
+- 📱 **Mobile App**: Native mobile application
+- 🤖 **AI Integration**: Intelligent content recommendations
+- 📊 **Advanced Analytics**: Machine learning insights
+- 🔐 **Enhanced Security**: Additional authentication methods
+
+### **Technical Improvements**
+- 🚀 **Performance**: Caching and optimization
+- 📈 **Scalability**: Microservices architecture
+- 🔧 **DevOps**: CI/CD pipeline automation
+- 🧪 **Testing**: Comprehensive test suite
+- 📚 **Documentation**: API documentation with Swagger
+
+---
+
+## 📞 Contact Information
+
+- **Repository**: [GitHub](https://github.com/clarkorcullo/SocialEngineeringAwareness)
+- **Live Demo**: [Render Deployment](https://social-engineering-awareness.onrender.com/)
+- **Issues**: [GitHub Issues](https://github.com/clarkorcullo/SocialEngineeringAwareness/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/clarkorcullo/SocialEngineeringAwareness/discussions)
+
+---
+
+## ⚠️ Important Notes
+
+### **Educational Purpose**
+This application is designed **exclusively for educational purposes** to raise awareness about social engineering attacks and prevention strategies. It should not be used for malicious purposes.
+
+### **Security Disclaimer**
+While this application demonstrates security concepts, it is not intended as a complete security solution. Always follow organizational security policies and consult with security professionals.
+
+### **Data Privacy**
+- User data is stored locally in SQLite database
+- No personal information is shared with third parties
+- Users can request data deletion
+- Compliance with educational data privacy standards
+
+---
+
+**🎓 Built with ❤️ for Cybersecurity Education**
+
+*Empowering the next generation of security-aware professionals through interactive learning and real-world simulations.*
