@@ -61,7 +61,9 @@ class Module(BaseModel, TimestampMixin):
             status=ModuleStatus.COMPLETED.value
         ).count()
         
-        return (completed_users / total_users) * 100
+        if total_users and total_users > 0:
+            return (completed_users / total_users) * 100
+        return 0.0
     
     @property
     def average_score(self) -> float:
@@ -75,7 +77,9 @@ class Module(BaseModel, TimestampMixin):
             return 0.0
         
         total_score = sum(score[0] for score in scores)
-        return total_score / len(scores)
+        if scores and len(scores) > 0:
+            return total_score / len(scores)
+        return 0.0
     
     def get_questions_by_set(self, question_set: int = 1) -> List['KnowledgeCheckQuestion']:
         """Get questions for a specific question set"""

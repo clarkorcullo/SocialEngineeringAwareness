@@ -934,7 +934,24 @@ def dashboard():
     except Exception as e:
         flash(f'Error loading dashboard: {e}', 'error')
         logger.error(f"Error loading dashboard: {e}")
-        return redirect(url_for('index'))
+        # Return a minimal dashboard with safe defaults
+        try:
+            return render_template('dashboard.html', 
+                                 user_stats={},
+                                 user_progress=[],
+                                 modules=[],
+                                 completed_modules=0,
+                                 completed_module_ids=[],
+                                 total_modules=0,
+                                 final_result=None,
+                                 survey_completed=None,
+                                 accessible_modules=[],
+                                 recent_activities=[],
+                                 average_score=0,
+                                 total_time_spent=0)
+        except Exception as template_error:
+            logger.error(f"Template rendering error: {template_error}")
+            return redirect(url_for('index'))
 
 @app.route('/module/<int:module_id>')
 @login_required
@@ -992,7 +1009,7 @@ def module(module_id):
         ).order_by(AssessmentResult.created_at.desc()).first()
         
         # Calculate percentage score
-        if knowledge_check_result:
+        if knowledge_check_result and knowledge_check_result.total_questions and knowledge_check_result.total_questions > 0:
             knowledge_check_score = int((knowledge_check_result.score / knowledge_check_result.total_questions) * 100)
         else:
             knowledge_check_score = 0
@@ -1105,7 +1122,7 @@ def submit_assessment(module_id):
         
         # Calculate score
         score = correct_answers
-        percentage = int((correct_answers / total_questions) * 100)
+        percentage = int((correct_answers / total_questions) * 100) if total_questions and total_questions > 0 else 0
         
         # Determine if passed (80% threshold)
         passed = percentage >= app.config.get('KNOWLEDGE_CHECK_PASSING_SCORE', 80)
