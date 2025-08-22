@@ -320,9 +320,9 @@ def index():
     try:
         return render_template('index.html')
     except Exception as e:
-        flash(f"Error loading page: {e}", 'error')
         logger.error(f"Error loading index page: {e}")
-        return redirect(url_for('login'))
+        # Don't redirect to login on error, just show the page
+        return render_template('index.html')
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -404,12 +404,24 @@ def login():
     return render_template('login.html')
 
 @app.route('/logout')
-@login_required
 def logout():
     """User logout route"""
-    logout_user()
-    flash('You have been logged out.', 'info')
-    logger.info(f"User {current_user.username} logged out")
+    try:
+        if current_user.is_authenticated:
+            username = current_user.username
+            logout_user()
+            flash('You have been logged out.', 'info')
+            logger.info(f"User {username} logged out successfully")
+        else:
+            flash('You were already logged out.', 'info')
+            logger.info("Logout attempted for non-authenticated user")
+    except Exception as e:
+        logger.error(f"Error during logout: {e}")
+        flash('Logout completed.', 'info')
+    finally:
+        # Clear any session data
+        session.clear()
+    
     return redirect(url_for('index'))
 
 @app.route('/dashboard')

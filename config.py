@@ -26,6 +26,7 @@ class Config:
     SESSION_COOKIE_SECURE = os.environ.get('RENDER', False)
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
+    SESSION_COOKIE_NAME = 'social_engineering_session'
     
     # Security Configuration
     PASSWORD_MIN_LENGTH = 12
