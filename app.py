@@ -1166,7 +1166,251 @@ def submit_assessment(module_id):
         return redirect(url_for('dashboard'))
 
 # =============================================================================
-# 10.4 SIMULATION ROUTES
+# 10.4 FINAL ASSESSMENT ROUTES
+# =============================================================================
+
+@app.route('/final_assessment')
+@login_required
+def final_assessment():
+    """
+    Final assessment route - displays the comprehensive final assessment.
+    
+    Features:
+    - Access control (only after completing all modules)
+    - Comprehensive question set
+    - Time tracking
+    - Certificate eligibility
+    
+    Returns:
+        str: Rendered final assessment template or redirect
+    """
+    try:
+        # Check if user has completed all modules
+        completed_modules = len(user_service.get_user_completed_modules(current_user.id))
+        total_modules = Module.count()
+        
+        if completed_modules < total_modules:
+            flash('You must complete all modules before taking the Final Assessment.', 'warning')
+            return redirect(url_for('dashboard'))
+        
+        # Check if user has already passed
+        existing_result = AssessmentResult.query.filter_by(
+            user_id=current_user.id,
+            assessment_type='final_assessment',
+            passed=True
+        ).first()
+        
+        if existing_result:
+            flash('You have already passed the Final Assessment!', 'info')
+            return redirect(url_for('dashboard'))
+        
+        return render_template('final_assessment_simple.html')
+        
+    except Exception as e:
+        flash(f'Error loading final assessment: {e}', 'error')
+        logger.error(f"Error loading final assessment: {e}")
+        return redirect(url_for('dashboard'))
+
+@app.route('/final_assessment_questions')
+@login_required
+def final_assessment_questions():
+    """
+    Final assessment questions route - displays the actual assessment.
+    
+    Returns:
+        str: Rendered final assessment questions template
+    """
+    try:
+        # Get final assessment questions
+        questions = FinalAssessmentQuestion.query.all()
+        if not questions:
+            flash('No final assessment questions available.', 'error')
+            return redirect(url_for('dashboard'))
+        
+        # Shuffle questions for variety
+        random.shuffle(questions)
+        
+        return render_template('final_assessment_questions.html', questions=questions)
+        
+    except Exception as e:
+        flash(f'Error loading final assessment questions: {e}', 'error')
+        logger.error(f"Error loading final assessment questions: {e}")
+        return redirect(url_for('dashboard'))
+
+@app.route('/submit_final_assessment', methods=['POST'])
+@login_required
+def submit_final_assessment():
+    """
+    Submit final assessment answers and calculate results.
+    
+    Returns:
+        str: Rendered result template or redirect
+    """
+    try:
+        # Get questions
+        questions = FinalAssessmentQuestion.query.all()
+        if not questions:
+            flash('No final assessment questions available.', 'error')
+            return redirect(url_for('dashboard'))
+        
+        # Process answers
+        answers = {}
+        correct_answers = 0
+        total_questions = len(questions)
+        
+        for question in questions:
+            answer = request.form.get(f'question_{question.id}')
+            answers[question.id] = answer
+            
+            if answer == question.correct_answer:
+                correct_answers += 1
+        
+        # Calculate score
+        score = correct_answers
+        percentage = int((correct_answers / total_questions) * 100) if total_questions and total_questions > 0 else 0
+        
+        # Determine if passed (70% threshold for final assessment)
+        passed = percentage >= app.config.get('FINAL_ASSESSMENT_PASSING_SCORE', 70)
+        
+        # Create assessment result
+        result = AssessmentResult(
+            user_id=current_user.id,
+            module_id=None,  # Final assessment is not tied to a specific module
+            assessment_type='final_assessment',
+            score=score,
+            total_questions=total_questions,
+            correct_answers=correct_answers,
+            passed=passed
+        )
+        
+        if result.save():
+            flash(f'Final Assessment completed! Score: {percentage}%', 'success' if passed else 'warning')
+            logger.info(f"User {current_user.username} completed final assessment with score {percentage}%")
+            
+            return render_template('final_assessment_result.html', 
+                                 score=percentage,
+                                 total_questions=total_questions,
+                                 correct_answers=correct_answers,
+                                 passed=passed,
+                                 questions=questions,
+                                 answers=answers)
+        else:
+            flash('Error saving final assessment results.', 'error')
+            return redirect(url_for('final_assessment'))
+            
+    except Exception as e:
+        flash(f'Error submitting final assessment: {e}', 'error')
+        logger.error(f"Error submitting final assessment: {e}")
+        return redirect(url_for('dashboard'))
+
+# =============================================================================
+# 10.5 SURVEY AND CERTIFICATE ROUTES
+# =============================================================================
+
+@app.route('/survey')
+@login_required
+def survey():
+    """
+    Program survey route - displays feedback survey.
+    
+    Returns:
+        str: Rendered survey template
+    """
+    try:
+        # Check if user has passed final assessment
+        final_result = AssessmentResult.query.filter_by(
+            user_id=current_user.id,
+            assessment_type='final_assessment',
+            passed=True
+        ).first()
+        
+        if not final_result:
+            flash('You must pass the Final Assessment before taking the survey.', 'warning')
+            return redirect(url_for('dashboard'))
+        
+        # Check if survey already completed
+        existing_survey = FeedbackSurvey.query.filter_by(user_id=current_user.id).first()
+        if existing_survey:
+            flash('You have already completed the survey.', 'info')
+            return redirect(url_for('dashboard'))
+        
+        return render_template('survey.html')
+        
+    except Exception as e:
+        flash(f'Error loading survey: {e}', 'error')
+        logger.error(f"Error loading survey: {e}")
+        return redirect(url_for('dashboard'))
+
+@app.route('/submit_survey', methods=['POST'])
+@login_required
+def submit_survey():
+    """
+    Submit survey responses.
+    
+    Returns:
+        str: Redirect to certificate or dashboard
+    """
+    try:
+        # Get survey data
+        rating = request.form.get('rating', type=int)
+        feedback = request.form.get('feedback', '')
+        
+        # Create survey record
+        survey = FeedbackSurvey(
+            user_id=current_user.id,
+            rating=rating,
+            feedback=feedback
+        )
+        
+        if survey.save():
+            flash('Survey submitted successfully!', 'success')
+            logger.info(f"User {current_user.username} completed survey")
+            return redirect(url_for('certificate'))
+        else:
+            flash('Error saving survey.', 'error')
+            return redirect(url_for('survey'))
+            
+    except Exception as e:
+        flash(f'Error submitting survey: {e}', 'error')
+        logger.error(f"Error submitting survey: {e}")
+        return redirect(url_for('survey'))
+
+@app.route('/certificate')
+@login_required
+def certificate():
+    """
+    Certificate generation route.
+    
+    Returns:
+        str: Rendered certificate template
+    """
+    try:
+        # Check if user is eligible for certificate
+        final_result = AssessmentResult.query.filter_by(
+            user_id=current_user.id,
+            assessment_type='final_assessment',
+            passed=True
+        ).first()
+        
+        survey_completed = FeedbackSurvey.query.filter_by(user_id=current_user.id).first()
+        
+        if not final_result:
+            flash('You must pass the Final Assessment to generate a certificate.', 'warning')
+            return redirect(url_for('dashboard'))
+        
+        if not survey_completed:
+            flash('You must complete the survey to generate a certificate.', 'warning')
+            return redirect(url_for('survey'))
+        
+        return render_template('certificate.html', user=current_user)
+        
+    except Exception as e:
+        flash(f'Error generating certificate: {e}', 'error')
+        logger.error(f"Error generating certificate: {e}")
+        return redirect(url_for('dashboard'))
+
+# =============================================================================
+# 10.6 SIMULATION ROUTES
 # =============================================================================
 
 @app.route('/simulation/<simulation_type>')
@@ -1261,7 +1505,7 @@ def submit_simulation():
         })
 
 # =============================================================================
-# 10.5 PROGRESS AND ANALYTICS ROUTES
+# 10.7 PROGRESS AND ANALYTICS ROUTES
 # =============================================================================
 
 @app.route('/profile')
@@ -1333,7 +1577,7 @@ def update_progress():
         return jsonify({'success': False, 'error': str(e)})
 
 # =============================================================================
-# 10.6 SYSTEM ROUTES
+# 10.8 SYSTEM ROUTES
 # =============================================================================
 
 @app.route('/health')
