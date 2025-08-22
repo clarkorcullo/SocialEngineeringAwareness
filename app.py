@@ -116,6 +116,11 @@ app.config.from_object(config[config_name])
 # Configure reverse proxy for production deployment (Render/Heroku)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
+# Configure URL building for production
+if os.environ.get('RENDER'):
+    app.config['SERVER_NAME'] = None  # Allow URL building without server name
+    app.config['PREFERRED_URL_SCHEME'] = 'https'
+
 # =============================================================================
 # 4. EXTENSIONS AND SERVICES INITIALIZATION
 # =============================================================================
@@ -271,6 +276,7 @@ with app.app_context():
     except Exception as e:
         logger.error(f"[ERROR] Application initialization failed: {e}")
         # Continue anyway - the app might still work
+        # This is expected on Render where database might not be writable during import
 
 # =============================================================================
 # 9. EDUCATIONAL CONTENT CREATION FUNCTIONS
@@ -1232,6 +1238,33 @@ def health_check():
             'error': str(e)
         }), 500
 
+@app.route('/init-db')
+def init_database_route():
+    """
+    Database initialization endpoint for Render deployment.
+    
+    This endpoint ensures the database is properly initialized
+    when the application starts on Render.
+    
+    Returns:
+        str: JSON response with initialization status
+    """
+    try:
+        with app.app_context():
+            init_database()
+        return jsonify({
+            'status': 'success',
+            'message': 'Database initialized successfully',
+            'timestamp': datetime.now().isoformat()
+        }), 200
+    except Exception as e:
+        logger.error(f"Database initialization failed: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
 # =============================================================================
 # 11. ERROR HANDLERS
 # =============================================================================
@@ -1289,6 +1322,15 @@ if __name__ == '__main__':
     logger.info("[STARTUP] Initializing Social Engineering Awareness Program with OOP...")
     
     try:
+        # Initialize database when app starts (not during import)
+        with app.app_context():
+            try:
+                init_database()
+                logger.info("[SUCCESS] Database initialized on startup")
+            except Exception as e:
+                logger.error(f"[ERROR] Database initialization on startup failed: {e}")
+                # Continue anyway - the app might still work
+        
         # Get configuration
         port = int(os.environ.get('PORT', 5000))
         debug = os.environ.get('FLASK_ENV') == 'development'
