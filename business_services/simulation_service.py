@@ -130,8 +130,8 @@ class SimulationService:
             total_attempts = len(results)
             total_participants = len(set(r.user_id for r in results))
             completed_simulations = [r for r in results if r.completed]
-            average_score = sum(r.score for r in completed_simulations) / len(completed_simulations) if completed_simulations else 0
-            completion_rate = (len(completed_simulations) / total_attempts) * 100
+            average_score = sum(r.score for r in completed_simulations) / len(completed_simulations) if completed_simulations and len(completed_simulations) > 0 else 0
+            completion_rate = (len(completed_simulations) / total_attempts) * 100 if total_attempts and total_attempts > 0 else 0
             best_score = max(r.score for r in results) if results else 0
             
             return {

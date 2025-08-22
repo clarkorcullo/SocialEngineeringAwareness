@@ -159,8 +159,8 @@ class AssessmentService:
             
             total_attempts = len(results)
             total_participants = len(set(r.user_id for r in results))
-            average_score = sum(r.score for r in results) / total_attempts
-            pass_rate = (len([r for r in results if r.passed]) / total_attempts) * 100
+            average_score = sum(r.score for r in results) / total_attempts if total_attempts and total_attempts > 0 else 0
+            pass_rate = (len([r for r in results if r.passed]) / total_attempts) * 100 if total_attempts and total_attempts > 0 else 0
             best_score = max(r.score for r in results)
             
             return {

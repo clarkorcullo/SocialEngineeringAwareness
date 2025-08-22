@@ -180,7 +180,7 @@ class AnalyticsService:
                 assessment_stats = {
                     'total_attempts': len(module_assessments),
                     'passed_attempts': len([a for a in module_assessments if a.passed]),
-                    'average_score': sum(a.score for a in module_assessments) / len(module_assessments) if module_assessments else 0,
+                    'average_score': sum(a.score for a in module_assessments) / len(module_assessments) if module_assessments and len(module_assessments) > 0 else 0,
                     'best_score': max(a.score for a in module_assessments) if module_assessments else 0
                 }
                 
@@ -283,9 +283,9 @@ class AnalyticsService:
                 
                 total_attempts = len(assessments)
                 passed_attempts = len([a for a in assessments if a.passed])
-                average_score = sum(a.score for a in assessments) / total_attempts
-                best_score = max(a.score for a in assessments)
-                average_time = sum(a.time_taken_minutes for a in assessments) / total_attempts
+                average_score = sum(a.score for a in assessments) / total_attempts if total_attempts and total_attempts > 0 else 0
+                best_score = max(a.score for a in assessments) if assessments else 0
+                average_time = sum(a.time_taken_minutes for a in assessments) / total_attempts if total_attempts and total_attempts > 0 else 0
                 
                 # Score distribution
                 score_distribution = {
@@ -300,7 +300,7 @@ class AnalyticsService:
                 analytics[assessment_type] = {
                     'total_attempts': total_attempts,
                     'passed_attempts': passed_attempts,
-                    'pass_rate': round((passed_attempts / total_attempts) * 100, 2),
+                    'pass_rate': round((passed_attempts / total_attempts) * 100, 2) if total_attempts and total_attempts > 0 else 0,
                     'average_score': round(average_score, 2),
                     'best_score': best_score,
                     'average_time_minutes': round(average_time, 2),
@@ -333,14 +333,14 @@ class AnalyticsService:
                 
                 total_attempts = len(simulations)
                 completed_simulations = len([s for s in simulations if s.completed])
-                average_score = sum(s.score for s in completed_simulations) / len(completed_simulations) if completed_simulations else 0
+                average_score = sum(s.score for s in completed_simulations) / len(completed_simulations) if completed_simulations and len(completed_simulations) > 0 else 0
                 best_score = max(s.score for s in simulations) if simulations else 0
-                average_time = sum(s.time_taken_minutes for s in completed_simulations) / len(completed_simulations) if completed_simulations else 0
+                average_time = sum(s.time_taken_minutes for s in completed_simulations) / len(completed_simulations) if completed_simulations and len(completed_simulations) > 0 else 0
                 
                 analytics[simulation_type] = {
                     'total_attempts': total_attempts,
                     'completed_simulations': completed_simulations,
-                    'completion_rate': round((completed_simulations / total_attempts) * 100, 2),
+                    'completion_rate': round((completed_simulations / total_attempts) * 100, 2) if total_attempts and total_attempts > 0 else 0,
                     'average_score': round(average_score, 2),
                     'best_score': best_score,
                     'average_time_minutes': round(average_time, 2)

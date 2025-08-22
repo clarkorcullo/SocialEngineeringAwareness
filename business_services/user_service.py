@@ -177,7 +177,7 @@ class UserService:
             assessment_stats = {
                 'total_assessments': len(assessments),
                 'passed_assessments': len([a for a in assessments if a.passed]),
-                'average_score': sum(a.score for a in assessments) / len(assessments) if assessments else 0,
+                'average_score': sum(a.score for a in assessments) / len(assessments) if assessments and len(assessments) > 0 else 0,
                 'best_score': max(a.score for a in assessments) if assessments else 0
             }
             
@@ -186,7 +186,7 @@ class UserService:
             simulation_stats = {
                 'total_simulations': len(simulations),
                 'completed_simulations': len([s for s in simulations if s.completed]),
-                'average_score': sum(s.score for s in simulations) / len(simulations) if simulations else 0
+                'average_score': sum(s.score for s in simulations) / len(simulations) if simulations and len(simulations) > 0 else 0
             }
             
             # Combine all statistics
