@@ -538,12 +538,14 @@ def register():
             email = request.form.get('email', '').strip()
             password = request.form.get('password', '')
             confirm_password = request.form.get('confirm_password', '')
-            full_name = request.form.get('full_name', '').strip()
             specialization = request.form.get('specialization', '')
             year_level = request.form.get('year_level', '')
             
+            # Set default full name (can be updated in profile later)
+            full_name = f"User {username}"
+            
             # Validate required fields
-            if not all([username, email, password, confirm_password, full_name, specialization, year_level]):
+            if not all([username, email, password, confirm_password, specialization, year_level]):
                 flash('All fields are required.', 'error')
                 logger.warning(f"Registration failed: Missing required fields for user {username}")
                 return render_template('register.html', form_data=request.form)

@@ -24,10 +24,14 @@ class UserService:
         user_data = {k: (v.strip() if isinstance(v, str) else v) for k, v in user_data.items()}
         
         # Validate required fields
-        required_fields = ['username', 'email', 'password', 'full_name', 'specialization', 'year_level']
+        required_fields = ['username', 'email', 'password', 'specialization', 'year_level']
         for field in required_fields:
             if field not in user_data or not user_data[field]:
                 raise ValueError(f"Missing required field: {field}")
+        
+        # Set default full name if not provided
+        if 'full_name' not in user_data or not user_data['full_name']:
+            user_data['full_name'] = f"User {user_data['username']}"
         
         # Validate email format
         if not UserService._is_valid_email(user_data['email']):
