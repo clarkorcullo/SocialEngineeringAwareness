@@ -51,7 +51,7 @@ from data_models import (
 from business_services import (
     UserService, AssessmentService, SimulationService
 )
-from helper_utilities.data_structures import *
+
 
 # Import configuration
 from config import config
@@ -420,11 +420,8 @@ def dashboard():
         # Get user statistics using service
         user_stats = user_service.get_user_statistics(current_user.id)
         
-        # Get user progress using data structures
-        progress_list = LinkedList()
+        # Get user progress
         user_progress = UserProgress.get_user_progress(current_user.id)
-        for progress in user_progress:
-            progress_list.append(progress)
         
         # Get modules
         modules = Module.get_all_ordered()
@@ -550,7 +547,7 @@ def dashboard():
         
         return render_template('dashboard.html', 
                              user_stats=user_stats,
-                             progress_list=progress_list,
+                             user_progress=user_progress,
                              modules=modules,
                              completed_modules=completed_modules,
                              completed_module_ids=completed_module_ids,
