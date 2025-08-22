@@ -264,7 +264,10 @@ class UserService:
                 return False
             
             # Calculate knowledge check percentage
-            knowledge_check_percentage = (knowledge_check_result.score / knowledge_check_result.total_questions) * 100
+            if knowledge_check_result.total_questions and knowledge_check_result.total_questions > 0:
+                knowledge_check_percentage = (knowledge_check_result.score / knowledge_check_result.total_questions) * 100
+            else:
+                knowledge_check_percentage = 0
             if knowledge_check_percentage < 80:  # Need 80% to pass
                 return False
             

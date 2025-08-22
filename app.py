@@ -794,7 +794,7 @@ def dashboard():
         modules = Module.get_all_ordered()
         
         # Get total modules count
-        total_modules = Module.count()
+        total_modules = Module.count() if modules else 0
         
         # Get properly completed modules using validation
         completed_module_ids = user_service.get_user_completed_modules(current_user.id)
@@ -853,7 +853,7 @@ def dashboard():
                 'follow_up': 'Follow-up Assessment'
             }.get(ar.assessment_type, 'Assessment')
             title = f"{assessment_label}" + (f" - {module_name}" if module_name else '')
-            percent = int((ar.score / ar.total_questions) * 100) if ar.total_questions else ar.score
+            percent = int((ar.score / ar.total_questions) * 100) if ar.total_questions and ar.total_questions > 0 else ar.score
             recent_activities.append({
                 'type': 'assessment',
                 'title': title,
@@ -905,24 +905,30 @@ def dashboard():
         if assessment_results:
             total_score = sum(result.score for result in assessment_results)
             total_questions = sum(result.total_questions for result in assessment_results)
-            average_score = int((total_score / total_questions) * 100) if total_questions > 0 else 0
+            average_score = int((total_score / total_questions) * 100) if total_questions and total_questions > 0 else 0
         else:
             average_score = 0
         
         # Calculate total time spent (estimate: 30 minutes per completed module)
         total_time_spent = completed_modules * 30
         
+        # Ensure all variables are safe for template rendering
+        safe_user_stats = user_stats or {}
+        safe_user_progress = user_progress or []
+        safe_modules = modules or []
+        safe_recent_activities = recent_activities or []
+        
         return render_template('dashboard.html', 
-                             user_stats=user_stats,
-                             user_progress=user_progress,
-                             modules=modules,
+                             user_stats=safe_user_stats,
+                             user_progress=safe_user_progress,
+                             modules=safe_modules,
                              completed_modules=completed_modules,
                              completed_module_ids=completed_module_ids,
                              total_modules=total_modules,
                              final_result=final_result,
                              survey_completed=survey_completed,
                              accessible_modules=accessible_modules,
-                             recent_activities=recent_activities,
+                             recent_activities=safe_recent_activities,
                              average_score=average_score,
                              total_time_spent=total_time_spent)
     except Exception as e:
