@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Social Engineering Awareness Program
 
 A production-ready, OOP‑driven Flask application that delivers interactive learning on social engineering threats, defenses, and incident response. The system provides a structured curriculum with knowledge checks, real‑world simulations, analytics, and certification.
@@ -309,3 +310,7 @@ For support and questions:
 ---
 
 **Note**: This application is for educational use to raise awareness about social engineering attacks and prevention strategies.
+=======
+# SocialEngineeringAwareness
+A Capstone Project
+>>>>>>> 1070d8cd1e2f97b8a84357282c35cb161e480ad0
