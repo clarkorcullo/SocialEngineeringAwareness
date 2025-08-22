@@ -254,28 +254,7 @@ def load_user(user_id):
         return None
 
 # =============================================================================
-# 7. DATABASE INITIALIZATION ON STARTUP
-# =============================================================================
-
-# Defer database initialization to first request to avoid calling helpers
-# (e.g., create_default_modules) before they are defined at import time.
-@app.before_first_request
-def ensure_database_initialized():
-    try:
-        init_database()
-        logger.info("[SUCCESS] Database initialized (first request)")
-    except Exception as e:
-        logger.error(f"[ERROR] Database init on first request failed: {e}")
-
-# =============================================================================
-# 8. APPLICATION FACTORY PATTERN
-# =============================================================================
-
-# NOTE: Removed import-time DB initialization to avoid NameError and startup races
-# Initialization now happens on first request via @app.before_first_request
-
-# =============================================================================
-# 9. EDUCATIONAL CONTENT CREATION FUNCTIONS
+# 7. EDUCATIONAL CONTENT CREATION FUNCTIONS
 # =============================================================================
 
 def create_default_modules():
@@ -1475,4 +1454,22 @@ if __name__ == '__main__':
         
     except Exception as e:
         logger.error(f"[ERROR] Failed to start application: {e}")
-        sys.exit(1) 
+        sys.exit(1)
+
+# =============================================================================
+# 13. DATABASE INITIALIZATION FOR PRODUCTION
+# =============================================================================
+
+# Simple database initialization that works with Flask 3.0
+# This runs when the module is imported but after all functions are defined
+try:
+    with app.app_context():
+        # Only initialize if database is empty
+        if Module.count() == 0:
+            init_database()
+            logger.info("[SUCCESS] Database initialized on import (production)")
+        else:
+            logger.info("[SUCCESS] Database already initialized")
+except Exception as e:
+    logger.error(f"[ERROR] Production database init failed: {e}")
+    # Continue anyway - the app will work and can be initialized via /init-db endpoint 
