@@ -20,6 +20,12 @@ class Config:
         SQLALCHEMY_DATABASE_URI = 'sqlite:///social_engineering_awareness.db'
     
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_pre_ping': True,
+        'pool_recycle': 300,
+        'pool_timeout': 20,
+        'max_overflow': 10
+    }
     
     # Session Configuration
     PERMANENT_SESSION_LIFETIME = timedelta(hours=24)
@@ -74,18 +80,46 @@ class Config:
     APP_VERSION = '1.0.0'
     APP_DESCRIPTION = 'Educational platform for social engineering awareness'
     ORGANIZATION = 'Mapúa Malayan Digital College (MMDC)'
+    
+    # Performance Configuration
+    JSON_SORT_KEYS = False
+    JSONIFY_PRETTYPRINT_REGULAR = False
+    TEMPLATES_AUTO_RELOAD = False
+    
+    # Security Headers
+    SECURITY_HEADERS = {
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'SAMEORIGIN',
+        'X-XSS-Protection': '1; mode=block',
+        'Strict-Transport-Security': 'max-age=31536000; includeSubDomains' if os.environ.get('RENDER') else None
+    }
 
 class DevelopmentConfig(Config):
     """Development configuration"""
     DEBUG = True
     FLASK_ENV = 'development'
     LOG_LEVEL = 'DEBUG'
+    TEMPLATES_AUTO_RELOAD = True
 
 class ProductionConfig(Config):
     """Production configuration"""
     DEBUG = False
     FLASK_ENV = 'production'
     LOG_LEVEL = 'WARNING'
+    
+    # Enhanced production security
+    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    
+    # Production database settings
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_pre_ping': True,
+        'pool_recycle': 300,
+        'pool_timeout': 20,
+        'max_overflow': 10,
+        'echo': False
+    }
 
 class TestingConfig(Config):
     """Testing configuration"""
@@ -99,5 +133,5 @@ config = {
     'development': DevelopmentConfig,
     'production': ProductionConfig,
     'testing': TestingConfig,
-    'default': DevelopmentConfig
+    'default': ProductionConfig
 }
