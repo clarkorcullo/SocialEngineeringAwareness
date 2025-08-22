@@ -262,21 +262,14 @@ except Exception as e:
 # 8. APPLICATION FACTORY PATTERN
 # =============================================================================
 
-def create_app():
-    """
-    Application factory for better testing and configuration management.
-    
-    This pattern allows for:
-    - Multiple application instances
-    - Different configurations for testing
-    - Better separation of concerns
-    
-    Returns:
-        Flask: Configured Flask application instance
-    """
-    with app.app_context():
+# Initialize database and create default data
+with app.app_context():
+    try:
         init_database()
-    return app
+        logger.info("[SUCCESS] Application initialized successfully")
+    except Exception as e:
+        logger.error(f"[ERROR] Application initialization failed: {e}")
+        # Continue anyway - the app might still work
 
 # =============================================================================
 # 9. EDUCATIONAL CONTENT CREATION FUNCTIONS
@@ -1296,9 +1289,6 @@ if __name__ == '__main__':
     logger.info("[STARTUP] Initializing Social Engineering Awareness Program with OOP...")
     
     try:
-        # Create application instance
-        app = create_app()
-        
         # Get configuration
         port = int(os.environ.get('PORT', 5000))
         debug = os.environ.get('FLASK_ENV') == 'development'
