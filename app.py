@@ -498,6 +498,7 @@ def register():
     - Email format validation
     - Duplicate username/email checking
     - Secure password hashing
+    - Automatic database initialization
     
     Methods:
         GET: Display registration form
@@ -506,6 +507,16 @@ def register():
     Returns:
         str: Rendered template or redirect
     """
+    # Ensure database is initialized before processing registration
+    try:
+        with app.app_context():
+            db.create_all()
+            if Module.count() == 0:
+                create_default_data()
+                logger.info("[SUCCESS] Database auto-initialized during registration")
+    except Exception as e:
+        logger.error(f"[ERROR] Auto-database init during registration failed: {e}")
+    
     if request.method == 'POST':
         try:
             # Get and validate form data
@@ -570,6 +581,7 @@ def login():
     - Session management
     - Login attempt logging
     - Redirect to dashboard on success
+    - Automatic database initialization
     
     Methods:
         GET: Display login form
@@ -578,6 +590,16 @@ def login():
     Returns:
         str: Rendered template or redirect
     """
+    # Ensure database is initialized before processing login
+    try:
+        with app.app_context():
+            db.create_all()
+            if Module.count() == 0:
+                create_default_data()
+                logger.info("[SUCCESS] Database auto-initialized during login")
+    except Exception as e:
+        logger.error(f"[ERROR] Auto-database init during login failed: {e}")
+    
     if request.method == 'POST':
         try:
             username = request.form['username']
@@ -1464,12 +1486,16 @@ if __name__ == '__main__':
 # This runs when the module is imported but after all functions are defined
 try:
     with app.app_context():
-        # Only initialize if database is empty
+        # Always try to create tables first, then check if data exists
+        db.create_all()
+        logger.info("[SUCCESS] Database tables created")
+        
+        # Only populate data if database is empty
         if Module.count() == 0:
-            init_database()
+            create_default_data()
             logger.info("[SUCCESS] Database initialized on import (production)")
         else:
-            logger.info("[SUCCESS] Database already initialized")
+            logger.info("[SUCCESS] Database already has data")
 except Exception as e:
     logger.error(f"[ERROR] Production database init failed: {e}")
     # Continue anyway - the app will work and can be initialized via /init-db endpoint 
