@@ -2,7 +2,7 @@
 
 A **production-ready, enterprise-grade Flask application** that delivers comprehensive interactive learning on social engineering threats, defenses, and incident response. Built with modern software engineering practices, this platform provides a structured curriculum with knowledge checks, real-world simulations, advanced analytics, and professional certification.
 
-**🌐 Live Demo**: [social-engineering-awareness.onrender.com](https://social-engineering-awareness.onrender.com/)
+**🌐 Live Demo**: [social-engineering-awareness.onrender.com](https://mmdcsea.onrender.com)
 
 **📚 Repository**: [clarkorcullo/SocialEngineeringAwareness](https://github.com/clarkorcullo/SocialEngineeringAwareness)
 
