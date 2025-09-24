@@ -28,7 +28,7 @@ def main():
             print('Lesson 1.1 not found')
             return
         # Ensure lesson metadata is clean; render content only inside the topic (text first, then video)
-        correct_video = '/static/animations/module1/Module 1 Lesson 1.1 Part A - What is Social Engineering_.mov'
+        correct_video = 'https://www.youtube.com/embed/dQw4w9WgXcQ'
         lesson.video_url = None
         lesson.content_rich = ''
 

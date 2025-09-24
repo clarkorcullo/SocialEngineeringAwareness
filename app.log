@@ -5560,3 +5560,5 @@ WHERE user.username = ?
 2025-09-24 21:55:30,566 - werkzeug - INFO - 127.0.0.1 - - [24/Sep/2025 21:55:30] "[36mGET /static/Background.png?v=1.0 HTTP/1.1[0m" 304 -
 2025-09-24 22:38:41,641 - app - INFO - [SUCCESS] Database tables created
 2025-09-24 22:38:41,676 - app - INFO - [SUCCESS] Database already has data
+2025-09-24 23:20:00,631 - app - INFO - [SUCCESS] Database tables created
+2025-09-24 23:20:00,669 - app - INFO - [SUCCESS] Database already has data
