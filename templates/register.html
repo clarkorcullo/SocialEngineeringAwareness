@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <h2 class="mb-4 text-center">Register</h2>
+      <form method="post" action="/register">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label">Full Name</label>
+            <input class="form-control" name="full_name" placeholder="Optional">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Username</label>
+            <input class="form-control" name="username" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-control" name="email" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Password</label>
+            <input type="password" class="form-control" name="password" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Confirm Password</label>
+            <input type="password" class="form-control" name="confirm_password" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Specialization</label>
+            <input class="form-control" name="specialization" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Year Level</label>
+            <input class="form-control" name="year_level" required>
+          </div>
+        </div>
+        <div class="d-grid gap-2 mt-4">
+          <button type="submit" class="btn btn-primary">Create Account</button>
+          <a class="btn btn-outline-secondary" href="/login">Back to Login</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+

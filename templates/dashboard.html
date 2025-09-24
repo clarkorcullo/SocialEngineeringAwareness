@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-4">
+  <h2 class="mb-3">Dashboard</h2>
+
+  <div class="row g-3">
+    <div class="col-lg-8">
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Your Progress</h5>
+          <p class="mb-0">Completed Modules: {{ completed_modules }} / {{ total_modules }}</p>
+          <p class="mb-0">Average Score: {{ average_score }}%</p>
+          <p class="mb-0">Total Time Spent: {{ total_time_spent }} min</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Recent Activity</h5>
+          {% if recent_activities and recent_activities|length > 0 %}
+            <ul class="list-group list-group-flush">
+              {% for a in recent_activities %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  <div>
+                    <div class="fw-semibold">{{ a.title }}</div>
+                    <div class="text-muted small">{{ a.detail }}</div>
+                  </div>
+                  <span class="badge {{ a.badge_class }}">{{ a.badge_text }}</span>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <div class="text-muted">No recent activities yet.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Modules</h5>
+          {% if modules and modules|length > 0 %}
+            <div class="list-group">
+              {% for m in modules %}
+                {% set idx = loop.index %}
+                {% set accessible = accessible_modules[idx-1] if accessible_modules and idx-1 < accessible_modules|length else True %}
+                <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {{ 'disabled' if not accessible }}" href="{{ url_for('module', module_id=m.id) }}">
+                  <div>{{ m.order }}. {{ m.name }}</div>
+                  {% if m.id in completed_module_ids %}
+                    <span class="badge bg-success">Done</span>
+                  {% endif %}
+                </a>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="text-muted">No modules to display.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
