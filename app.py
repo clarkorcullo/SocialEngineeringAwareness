@@ -62,6 +62,7 @@ from business_services import (
     UserService, AssessmentService, SimulationService
 )
 from config import config
+from helper_utilities.video_map import get_video_id
 
 # =============================================================================
 # 2. LOGGING CONFIGURATION
@@ -1111,6 +1112,19 @@ def module(module_id):
         except Exception:
             first_incomplete_topic_id = None
 
+        # Provide YouTube video IDs to template for embedding where applicable
+        video_ids = {
+            1: {
+                'lesson_1_1_a': get_video_id('module1_lesson_1_1_a'),
+                'lesson_1_2_a': get_video_id('module1_lesson_1_2_a'),
+                'lesson_1_2_b': get_video_id('module1_lesson_1_2_b'),
+            },
+            2: {
+                'lesson_2_1_a': get_video_id('module2_lesson_2_1_a'),
+                'lesson_2_2_a': get_video_id('module2_lesson_2_2_a'),
+            }
+        }.get(module_id, {})
+
         return render_template('module.html', 
                              module=module_obj,
                              progress=progress,
@@ -1122,7 +1136,8 @@ def module(module_id):
                              completed_topics=completed_topics,
                              total_topics=total_topics,
                              completed_topic_ids=completed_topic_ids,
-                             first_incomplete_topic_id=first_incomplete_topic_id)
+                             first_incomplete_topic_id=first_incomplete_topic_id,
+                             video_ids=video_ids)
     except Exception as e:
         flash(f'Error loading module: {e}', 'error')
         logger.error(f"Error loading module {module_id}: {e}")
