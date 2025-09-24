@@ -28,7 +28,7 @@ CONTENT_HTML = (
 <div class="mt-3">
   <h5>Social Engineering in a Nutshell</h5>
   <p>Use this quick reference to remember the psychological levers attackers use.</p>
-  <img class="img-fluid rounded border" alt="Social Engineering in a Nutshell" src="/static/animations/module1/Blue%20and%20White%20Illustrated%20Tips%20%20Successful%20Business%20Infographic%20Poster%20(8).png" />
+  <img class="img-fluid rounded border" alt="Social Engineering in a Nutshell" src="/static/Blue%20and%20White%20Illustrated%20Tips%20%20Successful%20Business%20Infographic%20Poster%20(8).png" />
  </div>
 """
 ).strip()
