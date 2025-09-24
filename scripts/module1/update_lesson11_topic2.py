@@ -2,9 +2,10 @@ import os
 import sys
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_ROOT = os.path.dirname(CURRENT_DIR)
+SCRIPTS_DIR = os.path.dirname(CURRENT_DIR)
+PROJECT_ROOT = os.path.dirname(SCRIPTS_DIR)
 if PROJECT_ROOT not in sys.path:
-    sys.path.insert(0, PROJECT_ROOT)
+	sys.path.insert(0, PROJECT_ROOT)
 
 os.environ['FLASK_ENV'] = 'production'
 
@@ -13,7 +14,7 @@ from data_models.content_models import Lesson, LessonTopic
 
 
 CONTENT_HTML = (
-    """
+	"""
 <h4>Core Lesson Content: The Anatomy of a Human-Based Attack</h4>
 <p>Social engineering attacks manipulate people into sharing information, downloading software, or making other mistakes that compromise their security. It’s sometimes called “human hacking,” because it uses psychological manipulation instead of technical skills. According to reports, social engineering is a leading cause of network compromise today.</p>
 <p>This is one of the biggest challenges in cybersecurity. Even with strong firewalls and up-to-date antivirus software, a crafty social engineer can get right through by targeting you, the user. It’s like having a strong lock on your door, but a scammer just convinces you to hand them the key.</p>
@@ -34,26 +35,26 @@ CONTENT_HTML = (
 
 
 def main():
-    with app.app_context():
-        db.create_all()
-        lesson = Lesson.query.filter_by(module_id=1, order=11).first()
-        if not lesson:
-            print('Lesson 1.1 not found')
-            return
+	with app.app_context():
+		db.create_all()
+		lesson = Lesson.query.filter_by(module_id=1, order=11).first()
+		if not lesson:
+			print('Lesson 1.1 not found')
+			return
 
-        topic = LessonTopic.query.filter_by(lesson_id=lesson.id, order=2).first()
-        if not topic:
-            topic = LessonTopic(lesson_id=lesson.id, order=2, title='Core Lesson Content: The Anatomy of a Human-Based Attack')
-            db.session.add(topic)
-        topic.title = 'Core Lesson Content: The Anatomy of a Human-Based Attack'
-        topic.content_rich = CONTENT_HTML
-        topic.video_url = None
+		topic = LessonTopic.query.filter_by(lesson_id=lesson.id, order=2).first()
+		if not topic:
+			topic = LessonTopic(lesson_id=lesson.id, order=2, title='Core Lesson Content: The Anatomy of a Human-Based Attack')
+			db.session.add(topic)
+		topic.title = 'Core Lesson Content: The Anatomy of a Human-Based Attack'
+		topic.content_rich = CONTENT_HTML
+		topic.video_url = None
 
-        db.session.commit()
-        print('OK: Lesson 1.1 topic 2 updated')
+		db.session.commit()
+		print('OK: Lesson 1.1 topic 2 updated')
 
 
 if __name__ == '__main__':
-    main()
+	main()
 
 

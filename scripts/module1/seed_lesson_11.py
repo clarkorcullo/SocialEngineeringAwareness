@@ -12,6 +12,7 @@ os.environ['FLASK_ENV'] = 'production'
 
 from app import app, db
 from data_models.content_models import Lesson
+from helper_utilities.video_map import get_video_id
 
 
 HTML = '''<h3>Lesson 1.1: What is Social Engineering?</h3>
@@ -32,8 +33,9 @@ HTML = '''<h3>Lesson 1.1: What is Social Engineering?</h3>
 
 def main():
     module_id = 1
-    video = '/static/animations/module1/Module 1 Lesson 1.1 Part A - What is Social Engineering_.mov'
-    infographic = '/static/animations/module1/Blue and White Illustrated Tips  Successful Business Infographic Poster (8).png '
+    yt_id = get_video_id('module1_lesson_1_1_a')
+    video = f'https://www.youtube-nocookie.com/embed/{yt_id}' if yt_id else None
+    infographic = None
     with app.app_context():
         db.create_all()
         lesson = Lesson.query.filter_by(module_id=module_id, order=11).first()
@@ -46,7 +48,7 @@ def main():
                 content_rich=HTML,
                 video_url=video,
                 video_type='animated',
-                attachment_urls=json.dumps([infographic]),
+                attachment_urls=json.dumps([]),
                 est_time_min=3,
             )
             db.session.add(lesson)
@@ -56,7 +58,7 @@ def main():
             lesson.content_rich = HTML
             lesson.video_url = video
             lesson.video_type = 'animated'
-            lesson.attachment_urls = json.dumps([infographic])
+            lesson.attachment_urls = json.dumps([])
             lesson.est_time_min = 3
         db.session.commit()
         print('OK: Lesson 1.1 upserted')

@@ -14,6 +14,7 @@ os.environ['FLASK_ENV'] = 'production'
 
 from app import app, db
 from data_models.content_models import Lesson
+from helper_utilities.video_map import get_video_id
 
 
 HTML = '''<h3>Lesson 1.2: The Psychology Behind the Deception</h3>
@@ -42,7 +43,8 @@ def main():
     with app.app_context():
         db.create_all()
         lesson = Lesson.query.filter_by(module_id=1, order=12).first()
-        video_path = '/static/animations/module1/Module 1 Lesson 1.2 Part A - The Psychology Behind the Deception.mov'
+        yt_id = get_video_id('module1_lesson_1_2_a')
+        video_path = f'https://www.youtube-nocookie.com/embed/{yt_id}' if yt_id else None
         if not lesson:
             lesson = Lesson(
                 module_id=1,

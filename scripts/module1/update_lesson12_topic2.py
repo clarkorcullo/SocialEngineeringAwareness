@@ -2,7 +2,8 @@ import os
 import sys
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_ROOT = os.path.dirname(CURRENT_DIR)
+SCRIPTS_DIR = os.path.dirname(CURRENT_DIR)
+PROJECT_ROOT = os.path.dirname(SCRIPTS_DIR)
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
@@ -10,6 +11,7 @@ os.environ['FLASK_ENV'] = 'production'
 
 from app import app, db
 from data_models.content_models import Lesson, LessonTopic
+from helper_utilities.video_map import get_video_id
 
 
 CONTENT_HTML = (
@@ -35,8 +37,9 @@ def main():
             db.session.add(topic)
         topic.title = "The Manipulator's Toolkit"
         topic.content_rich = CONTENT_HTML
-        # Use Part B video for this topic
-        topic.video_url = '/static/animations/module1/Module 1 Lesson 1.2 Part B - The Psychology Behind the Deception.mov'
+        # Use Part B video for this topic (YouTube embed)
+        yt_id = get_video_id('module1_lesson_1_2_b')
+        topic.video_url = f'https://www.youtube-nocookie.com/embed/{yt_id}' if yt_id else None
 
         db.session.commit()
         print("OK: Lesson 1.2 topic 2 updated with intro text and Part B video")
